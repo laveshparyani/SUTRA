@@ -1,0 +1,23 @@
+# large sample footage — never commit
+CCTV Control Room/
+*.mp4
+*.mkv
+*.avi
+
+data/
+*.jpg
+*.png
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# node
+node_modules/
+dist/
+
+# env & secrets
+.env
+*.local

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sutra-command",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/Admin/Desktop/SUTRA/frontend"],
+      "port": 5173
+    }
+  ]
+}
