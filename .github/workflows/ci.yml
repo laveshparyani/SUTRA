@@ -71,7 +71,7 @@ jobs:
           pip install pip-audit
           pip-audit -r requirements.txt --ignore-vuln GHSA-4xh5-x5gv-qwph || true
 
-      - name: Secret scan (fails the build on a committed credential)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Secret scan of full history (fails on a committed credential)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz             | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --no-banner --exit-code 1
