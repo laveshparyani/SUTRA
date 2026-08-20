@@ -10,6 +10,9 @@ class CameraBase(BaseModel):
     district: str = ""
     lat: float | None = None
     lon: float | None = None
+    camera_type: str = ""
+    ownership: str = "government"
+    install_date: str = ""
     source_type: str = "http-progressive"
     source_url: str
     codec: str = ""
@@ -29,6 +32,9 @@ class CameraUpdate(BaseModel):
     district: str | None = None
     lat: float | None = None
     lon: float | None = None
+    camera_type: str | None = None
+    ownership: str | None = None
+    install_date: str | None = None
     source_type: str | None = None
     source_url: str | None = None
     monitoring: bool | None = None

@@ -17,7 +17,7 @@ function healthClass(cam) {
         : "idle";
 }
 
-function Feed({ cam, live }) {
+function Feed({ cam, live, scene }) {
   const [err, setErr] = useState(false);
   // a dropped stream must not blank the tile forever — retry shortly after a
   // failure so the feed returns on its own once the source recovers
@@ -51,9 +51,15 @@ function Feed({ cam, live }) {
       <div className="feed-bar">
         <span className={`led ${healthClass(cam)}`} />
         <span className="feed-name">{cam.name}</span>
-        <span className="dim small" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <span className="dim small" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
           {cam.location}
         </span>
+        {scene && (
+          <span className="mono small" style={{ color: "var(--teal)", whiteSpace: "nowrap" }}
+            title="Live scene analytics (person/vehicle detection)">
+            ⬤ {scene.persons}p · {scene.vehicles}v
+          </span>
+        )}
       </div>
     </div>
   );
@@ -62,13 +68,19 @@ function Feed({ cam, live }) {
 export function Wall() {
   const [cams, setCams] = useState([]);
   const [flowing, setFlowing] = useState({});   // camera_id -> frame_age_s
+  const [scenes, setScenes] = useState({});     // camera_id -> {persons, vehicles}
   const [dept, setDept] = useState("");
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [cameras, bridge] = await Promise.all([api.cameras(), api.bridgeStatus()]);
+        const [cameras, bridge, scene] = await Promise.all([
+          api.cameras(),
+          api.bridgeStatus(),
+          fetch("/api/insight/scene").then((r) => (r.ok ? r.json() : { cameras: {} })),
+        ]);
         setCams(cameras);
+        setScenes(scene.cameras || {});
         setFlowing(
           Object.fromEntries(
             bridge.workers
@@ -111,10 +123,10 @@ export function Wall() {
       </div>
       <div className="wall">
         {liveCams.map((cam) => (
-          <Feed cam={cam} live key={cam.id} />
+          <Feed cam={cam} live scene={scenes[cam.id]} key={cam.id} />
         ))}
         {others.map((cam) => (
-          <Feed cam={cam} live={false} key={cam.id} />
+          <Feed cam={cam} live={false} scene={scenes[cam.id]} key={cam.id} />
         ))}
         {cams.length === 0 && (
           <div className="empty-state" style={{ gridColumn: "1/-1" }}>

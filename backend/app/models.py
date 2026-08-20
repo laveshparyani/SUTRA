@@ -24,6 +24,9 @@ class Camera(Base):
     lat: Mapped[float | None] = mapped_column(Float, nullable=True)
     lon: Mapped[float | None] = mapped_column(Float, nullable=True)
     coords_approx: Mapped[bool] = mapped_column(Boolean, default=True)
+    camera_type: Mapped[str] = mapped_column(String, default="")   # fixed|ptz|dome|bullet|anpr|analog
+    ownership: Mapped[str] = mapped_column(String, default="government")  # government|private|society|commercial
+    install_date: Mapped[str] = mapped_column(String, default="")  # YYYY-MM-DD; drives ageing analysis
 
     source_type: Mapped[str] = mapped_column(String, default="http-progressive")  # http-progressive|hls|rtsp|onvif|file
     source_url: Mapped[str] = mapped_column(String)

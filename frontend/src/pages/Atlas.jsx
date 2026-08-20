@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { api } from "../api";
+import { api, fmtTime } from "../api";
 
 export function Atlas() {
   const [gap, setGap] = useState(null);
+  const [audit, setAudit] = useState([]);
 
   useEffect(() => {
     api.gapAnalysis().then(setGap).catch(() => {});
+    api.auditTrail(50).then(setAudit).catch(() => {});
   }, []);
 
   if (!gap) return <div className="empty-state"><div className="big">Loading…</div></div>;
@@ -42,6 +44,7 @@ export function Atlas() {
               <th>District</th>
               <th>Cameras</th>
               <th>Unhealthy</th>
+              <th>Ageing (5y+)</th>
               <th>Departments</th>
               <th>Assessment</th>
             </tr>
@@ -54,6 +57,9 @@ export function Atlas() {
                 <td className="mono" style={{ color: d.unhealthy ? "var(--red)" : "var(--text-2)" }}>
                   {d.unhealthy}
                 </td>
+                <td className="mono" style={{ color: d.ageing ? "var(--amber)" : "var(--text-2)" }}>
+                  {d.ageing ?? 0}
+                </td>
                 <td className="small">{d.departments.join(" · ")}</td>
                 <td>
                   {d.cameras < 3 ? (
@@ -64,6 +70,29 @@ export function Atlas() {
                     <span className="badge ok">adequate</span>
                   )}
                 </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="panel" style={{ marginTop: 14 }}>
+        <div className="panel-head">
+          Metadata Audit Trail
+          <span className="spacer" />
+          <span className="dim small">last {audit.length} actions</span>
+        </div>
+        <table className="grid">
+          <thead>
+            <tr><th>Time</th><th>Actor</th><th>Action</th><th>Detail</th></tr>
+          </thead>
+          <tbody>
+            {audit.map((a, i) => (
+              <tr key={i}>
+                <td className="mono small dim">{fmtTime(a.ts)}</td>
+                <td className="mono small">{a.actor}</td>
+                <td><span className="badge neutral">{a.action}</span></td>
+                <td className="small dim">{a.detail}</td>
               </tr>
             ))}
           </tbody>

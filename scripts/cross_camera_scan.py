@@ -21,13 +21,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
 from app.services import anpr  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
+# chinman bridge scanned 4000 daylight frames with 0 readable plates (camera
+# angle/distance) — excluded to spend compute where plates actually resolve
 CLIPS = {
-    "chinman_bridge": ROOT / "CCTV Control Room" / "Camera 1 - Chinman Bridge.mp4",
     "janpath": ROOT / "CCTV Control Room" / "Camera 2 - Janpath.mp4",
     "paldi_circle": ROOT / "CCTV Control Room" / "Camera 2 - Paldi Circle.mp4",
 }
 # footage runs ~21:00 -> 09:00; daylight is the last ~3h (sunrise ~06:15)
-DAY_START_H, DAY_END_H, STEP_S = 9.3, 11.95, 2
+DAY_START_H, DAY_END_H, STEP_S = 9.3, 11.95, 1
 
 def scan(name: str, path: Path) -> dict:
     cap = cv2.VideoCapture(str(path))
@@ -43,7 +44,10 @@ def scan(name: str, path: Path) -> dict:
         frames += 1
         for h in anpr.analyse_frame(frame):
             norm, valid = h.normalised, h.valid_format
-            if not valid or h.ocr_conf < 0.60:
+            # targeted hunt: anything within fuzzy range of the watchlist truck
+            if anpr.plate_similarity(norm, "GJ01D7553"):
+                print(f"[{name}] TRUCK CANDIDATE {norm} conf={h.ocr_conf:.2f} at {sec}s", flush=True)
+            if not valid or h.ocr_conf < 0.45:
                 continue
             rec = plates.setdefault(norm, {"count": 0, "best_conf": 0, "video_s": []})
             rec["count"] += 1
@@ -56,7 +60,11 @@ def scan(name: str, path: Path) -> dict:
     return plates
 
 def main() -> None:
-    results = {name: scan(name, path) for name, path in CLIPS.items()}
+    results = {}
+    for name, path in CLIPS.items():
+        results[name] = scan(name, path)
+        # incremental save so a killed run still leaves usable data
+        (ROOT / "data" / f"scan_{name}.json").write_text(json.dumps(results[name], indent=2))
     # cross-camera intersection with confusion-fold tolerance
     folded = defaultdict(dict)  # folded_plate -> {camera: (plate, rec)}
     for cam, plates in results.items():

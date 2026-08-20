@@ -87,6 +87,82 @@ def route(plate: str, db: Session = Depends(get_db), user: User = Depends(curren
     }
 
 
+@router.get("/scene")
+def scene_stats(user: User = Depends(current_user)):
+    """Latest person/vehicle counts per monitored camera (YOLOX sidecar)."""
+    from ..services.objects import scene
+
+    return {"frames_analysed": scene.frames_analysed, "cameras": scene.latest}
+
+
+@router.get("/report")
+def output_report(
+    camera_id: int | None = None,
+    since: str | None = None,   # ISO timestamp, optional
+    until: str | None = None,
+    fmt: str = "csv",
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """Submission artifact: detected number plates with corresponding timestamps.
+
+    CSV columns match what the evaluation asks to see per detection — camera,
+    location, plate, confidence, reads backing the vote, timestamp (UTC + IST),
+    and the evidence snapshot path.
+    """
+    import csv
+    import io
+    from datetime import timedelta
+
+    from fastapi.responses import Response
+
+    q = db.query(Detection).filter(Detection.plate_text.isnot(None)).order_by(Detection.ts.asc())
+    if camera_id:
+        q = q.filter(Detection.camera_id == camera_id)
+    if since:
+        q = q.filter(Detection.ts >= since)
+    if until:
+        q = q.filter(Detection.ts <= until)
+    dets = q.limit(20000).all()
+    cams = {c.id: c for c in db.query(Camera).all()}
+
+    if fmt == "json":
+        return {
+            "generated_by": user.username,
+            "total": len(dets),
+            "detections": [
+                {
+                    "camera": cams[d.camera_id].name if d.camera_id in cams else d.camera_id,
+                    "location": cams[d.camera_id].location if d.camera_id in cams else "",
+                    "plate": d.plate_text,
+                    "confidence": d.plate_conf,
+                    "ts_utc": d.ts,
+                    "snapshot": d.snapshot_path,
+                }
+                for d in dets
+            ],
+        }
+
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["sr_no", "camera", "location", "district", "plate_number", "ocr_confidence",
+                "reads_in_vote", "timestamp_utc", "timestamp_ist", "evidence_snapshot"])
+    for i, d in enumerate(dets, 1):
+        cam = cams.get(d.camera_id)
+        votes = d.track_id.split(":")[1] if d.track_id and ":" in d.track_id else "1"
+        ist = d.ts + timedelta(hours=5, minutes=30)
+        w.writerow([i, cam.name if cam else d.camera_id, cam.location if cam else "",
+                    cam.district if cam else "", d.plate_text,
+                    f"{d.plate_conf:.2f}" if d.plate_conf else "",
+                    votes, d.ts.isoformat(sep=" ", timespec="seconds"),
+                    ist.isoformat(sep=" ", timespec="seconds"), d.snapshot_path])
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=sutra_anpr_output_report.csv"},
+    )
+
+
 @router.post("/analyse")
 async def analyse_upload(file: UploadFile, user: User = Depends(current_user)):
     """Run ANPR on an uploaded image — used for testing and the demo video."""

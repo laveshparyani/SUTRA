@@ -30,6 +30,7 @@ export const api = {
   camera: (id) => fetch(`/api/atlas/cameras/${id}`).then(json),
   discover: () => fetch("/api/atlas/discover", { method: "POST" }).then(json),
   gapAnalysis: () => fetch("/api/atlas/gap-analysis").then(json),
+  auditTrail: (limit = 100) => fetch(`/api/atlas/audit?limit=${limit}`).then(json),
   updateCamera: (id, body) =>
     fetch(`/api/atlas/cameras/${id}`, {
       method: "PATCH",
@@ -63,6 +64,18 @@ export const api = {
 
   health: () => fetch("/api/health").then(json),
 };
+
+/** Download an authenticated endpoint as a file (auth header ⇒ can't use <a href>). */
+export async function downloadFile(url, filename) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 
 export function fmtTime(ts) {
   if (!ts) return "—";
