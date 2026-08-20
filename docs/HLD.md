@@ -132,17 +132,31 @@ watchlist supports investigator-registered variants under one FIR.
 
 ## 7. Cybersecurity, privacy, auditability
 
-- JWT auth (PBKDF2-hashed credentials); RBAC: admin / department operator
+Implemented and covered by an automated security test suite (19 tests: auth,
+RBAC, media protection, traversal, input validation):
+
+- JWT auth (PBKDF2, 200k iterations); per-install auto-generated signing secret
+  (never a committed default); login **rate limiting** (sliding window per
+  client, audited failures); RBAC: admin / department operator
   (department-scoped data visibility, enforced server-side) / viewer.
-- Append-only audit trail of logins, onboarding, exports, watchlist changes,
-  acknowledgements — surfaced in the UI.
+- **All media protected**: camera snapshots, MJPEG streams, evidence images and
+  the alert WebSocket authenticate via an HttpOnly, SameSite cookie (invisible
+  to page scripts — XSS cannot exfiltrate it); evidence serving is confined to
+  the data directory with URL-encoding-safe path resolution and an
+  image-type allowlist.
+- **Input validation**: camera source URLs restricted to camera protocols;
+  file sources confined to the media directory (no SSRF into internal services,
+  no arbitrary server-file reads); all user-visible strings HTML-escaped
+  (map popups included); ORM-parameterised queries throughout.
+- Security headers (nosniff, frame-deny, no-referrer); CORS restricted to
+  configured origins; audit trail of logins (including failures), onboarding,
+  exports, watchlist changes, acknowledgements — surfaced in the UI.
 - Privacy by design: no continuous central video recording;
   watchlist-match-only alerting; evidence retention policy; owner names masked
   in connector responses.
-- Production hardening (documented; partially relaxed in the sandbox): TLS
-  everywhere, mTLS on federation links, media endpoints behind signed URLs,
-  secrets in a vault, network segmentation (ingest DMZ / analytics / data
-  planes), SIEM export.
+- Production additions (documented): TLS termination, mTLS on federation
+  links, secrets vault, network segmentation (ingest DMZ / analytics / data
+  planes), SIEM export, hash-chained audit log.
 
 ## 8. Scalability to ~80,000 cameras
 
