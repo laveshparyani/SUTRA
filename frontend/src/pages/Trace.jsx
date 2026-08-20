@@ -8,6 +8,7 @@ export function Trace() {
   const [params] = useSearchParams();
   const [plate, setPlate] = useState(params.get("plate") ?? "");
   const [route, setRoute] = useState(null);
+  const [vinfo, setVinfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(null);
 
@@ -15,8 +16,15 @@ export function Trace() {
     e?.preventDefault();
     if (!plate.trim()) return;
     setBusy(true);
+    setVinfo(null);
     try {
-      setRoute(await api.route(plate.trim()));
+      const r = await api.route(plate.trim());
+      setRoute(r);
+      // government-DB correlation (representative VAHAN connector)
+      fetch(`/api/watch/vehicle-info/${encodeURIComponent(r.plate)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then(setVinfo)
+        .catch(() => {});
     } finally {
       setBusy(false);
     }
@@ -47,6 +55,20 @@ export function Trace() {
             <PlateChip plate={route.plate} />
             <span className="badge neutral">{route.cameras_seen} cameras</span>
             <span className="badge neutral">{route.total_detections} detections</span>
+          </div>
+        )}
+        {vinfo && (
+          <div style={{ margin: "0 14px 12px", padding: "10px 12px", background: "var(--bg-2)", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12.5, lineHeight: 1.75 }}>
+            <div className="dim small" style={{ letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 }}>
+              {vinfo.source}
+            </div>
+            <b>{vinfo.maker} {vinfo.model}</b> · {vinfo.colour}<br />
+            {vinfo.vehicle_class} · {vinfo.fuel} · Reg. {vinfo.registration_date}<br />
+            {vinfo.rto}<br />
+            Owner: <span className="mono">{vinfo.owner_name}</span> · Insurance:{" "}
+            <span className={`badge ${vinfo.insurance_valid ? "ok" : "high"}`}>
+              {vinfo.insurance_valid ? "valid" : "lapsed"}
+            </span>
           </div>
         )}
 

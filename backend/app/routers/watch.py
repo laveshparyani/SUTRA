@@ -90,6 +90,21 @@ def ack_alert(
     return {"acknowledged": alert_id}
 
 
+@router.get("/vehicle-info/{plate}")
+def vehicle_info(plate: str, user: User = Depends(current_user)):
+    """Government-DB correlation: vehicle details by registration number.
+
+    Served by the connector framework (representative VAHAN dataset in the
+    sandbox; the production NIC endpoint is a connector swap).
+    """
+    from ..connectors.vahan import vahan
+
+    info = vahan.lookup(normalise_plate(plate))
+    if info is None:
+        raise HTTPException(404, "no record in connected government databases")
+    return info
+
+
 @router.websocket("/ws")
 async def alerts_ws(ws: WebSocket):
     """Real-time alert push for the Command UI."""

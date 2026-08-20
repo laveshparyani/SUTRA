@@ -21,3 +21,4 @@ dist/
 # env & secrets
 .env
 *.local
+infra/mediamtx/

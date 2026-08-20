@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     alert_cooldown_s: float = 900.0    # same plate+camera alert suppression (a parked
                                        # watchlist vehicle must not spam the operator)
 
+    # Scene analytics (person/vehicle counting sidecar)
+    scene_enabled: bool = True
+    scene_interval_s: float = 20.0     # min seconds between scene analyses per camera
+
     # Auth
     jwt_secret: str = "sutra-sandbox-secret-rotate-in-production"
     token_ttl_s: int = 12 * 3600

@@ -19,9 +19,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
+    from .db import migrate_sqlite
+
+    migrate_sqlite()
     if settings.insight_enabled:
         insight_engine.start()
         sampler.frame_subscribers.append(insight_engine.on_frame)
+    if settings.scene_enabled and (settings.data_dir / "models" / "yolox_nano.onnx").exists():
+        from .services.objects import scene
+
+        scene.start()
+        sampler.frame_subscribers.append(scene.on_frame)
     from .db import SessionLocal
 
     db = SessionLocal()
