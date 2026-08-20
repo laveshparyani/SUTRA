@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     db_url: str = ""  # derived from data_dir when empty
 
     # Bridge sampler
-    sample_interval_s: float = 1.0     # seconds between kept frames per camera
+    sample_interval_s: float = 0.5     # seconds between kept frames per camera (denser => better temporal voting)
     snapshot_every_s: float = 10.0     # seconds between JPEGs persisted to disk
     max_concurrent_cameras: int = 40   # safety cap on simultaneous ingest threads
     reconnect_backoff_s: float = 5.0
