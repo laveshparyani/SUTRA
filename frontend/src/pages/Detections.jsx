@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, fmtTime } from "../api";
+import { api, downloadFile, fmtTime } from "../api";
 import { PlateChip } from "../components/PlateChip.jsx";
 
 export function Detections() {
@@ -43,6 +43,18 @@ export function Detections() {
           ))}
         </select>
         <span className="dim small">{rows.length} shown</span>
+        <button
+          className="btn sm primary"
+          title="Detected plates with timestamps — the evaluation output report"
+          onClick={() =>
+            downloadFile(
+              `/api/insight/report?fmt=csv${camId ? `&camera_id=${camId}` : ""}`,
+              "sutra_anpr_output_report.csv"
+            )
+          }
+        >
+          ⬇ Output Report
+        </button>
       </div>
       <table className="grid">
         <thead>

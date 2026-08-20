@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, fmtTime } from "../api";
+import { api, downloadFile, fmtTime } from "../api";
 import { useAuth } from "../auth.jsx";
 
 export function Registry() {
@@ -80,6 +80,12 @@ export function Registry() {
           <option value="">All departments</option>
           {depts.map((d) => <option key={d}>{d}</option>)}
         </select>
+        <button
+          className="btn sm"
+          onClick={() => downloadFile("/api/atlas/export", "sutra_camera_registry.csv")}
+        >
+          ⬇ Export
+        </button>
         {canOperate && (
           <>
             <button className="btn sm" onClick={discover} disabled={discovering}>

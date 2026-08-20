@@ -266,11 +266,20 @@ class InsightEngine:
         self.alerts_fired += 1
 
         cam = db.get(Camera, det.camera_id)
+        # enrich with government-DB vehicle details (representative VAHAN connector)
+        from ..connectors.vahan import vahan
+
+        vehicle_info = None
+        try:
+            vehicle_info = vahan.lookup(entry.plate)
+        except Exception:
+            log.exception("vahan lookup failed")
         payload = {
             "type": "watchlist_alert",
             "alert_id": alert.id,
             "match_type": match_type,
             "watchlist_plate": entry.plate,
+            "vehicle_info": vehicle_info,
             "plate": hit.normalised,
             "reason": entry.reason,
             "priority": entry.priority,
