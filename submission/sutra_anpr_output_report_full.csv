@@ -1,0 +1,102 @@
+sr_no,camera,location,district,plate_number,ocr_confidence,reads_in_vote,timestamp_utc,timestamp_ist,evidence_snapshot
+1,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ81O7512,0.74,1,2026-08-18 07:40:35,2026-08-18 13:10:35,detections/31/20260818T074035388498Z_GJ81O7512.jpg
+2,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ81O7512,0.74,1,2026-08-18 07:41:09,2026-08-18 13:11:09,detections/31/20260818T074109512362Z_GJ81O7512.jpg
+3,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:42:07,2026-08-18 13:12:07,detections/31/20260818T074207240064Z_GI01D7553.jpg
+4,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:42:53,2026-08-18 13:12:53,detections/31/20260818T074253706916Z_GI01D7553.jpg
+5,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:43:36,2026-08-18 13:13:36,detections/31/20260818T074336373229Z_GI01D7553.jpg
+6,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:44:20,2026-08-18 13:14:20,detections/31/20260818T074420009632Z_GI01D7553.jpg
+7,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:45:02,2026-08-18 13:15:02,detections/31/20260818T074502855764Z_GI01D7553.jpg
+8,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:45:46,2026-08-18 13:15:46,detections/31/20260818T074546953774Z_GI01D7553.jpg
+9,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:46:32,2026-08-18 13:16:32,detections/31/20260818T074632824534Z_GI01D7553.jpg
+10,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:47:17,2026-08-18 13:17:17,detections/31/20260818T074717235087Z_GI01D7553.jpg
+11,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:48:01,2026-08-18 13:18:01,detections/31/20260818T074801959665Z_GI01D7553.jpg
+12,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:49:01,2026-08-18 13:19:01,detections/31/20260818T074901723586Z_GI01D7553.jpg
+13,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:49:43,2026-08-18 13:19:43,detections/31/20260818T074943588815Z_GI01D7553.jpg
+14,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:51:39,2026-08-18 13:21:39,detections/31/20260818T075139096990Z_GI01D7553.jpg
+15,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:52:27,2026-08-18 13:22:27,detections/31/20260818T075227099507Z_GI01D7553.jpg
+16,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:53:08,2026-08-18 13:23:08,detections/31/20260818T075308115701Z_GI01D7553.jpg
+17,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:53:50,2026-08-18 13:23:50,detections/31/20260818T075350909691Z_GI01D7553.jpg
+18,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:54:33,2026-08-18 13:24:33,detections/31/20260818T075433649328Z_GI01D7553.jpg
+19,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:55:29,2026-08-18 13:25:29,detections/31/20260818T075529385349Z_GI01D7553.jpg
+20,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:56:16,2026-08-18 13:26:16,detections/31/20260818T075616389472Z_GI01D7553.jpg
+21,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:57:02,2026-08-18 13:27:02,detections/31/20260818T075702159451Z_GI01D7553.jpg
+22,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:58:08,2026-08-18 13:28:08,detections/31/20260818T075808929242Z_GI01D7553.jpg
+23,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:58:56,2026-08-18 13:28:56,detections/31/20260818T075856227708Z_GI01D7553.jpg
+24,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 07:59:41,2026-08-18 13:29:41,detections/31/20260818T075941474209Z_GI01D7553.jpg
+25,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:00:53,2026-08-18 13:30:53,detections/31/20260818T080053301925Z_GI01D7553.jpg
+26,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:01:44,2026-08-18 13:31:44,detections/31/20260818T080144452263Z_GI01D7553.jpg
+27,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:02:25,2026-08-18 13:32:25,detections/31/20260818T080225881106Z_GI01D7553.jpg
+28,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:03:08,2026-08-18 13:33:08,detections/31/20260818T080308841977Z_GI01D7553.jpg
+29,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:03:52,2026-08-18 13:33:52,detections/31/20260818T080352046185Z_GI01D7553.jpg
+30,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:04:34,2026-08-18 13:34:34,detections/31/20260818T080434731483Z_GI01D7553.jpg
+31,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:05:18,2026-08-18 13:35:18,detections/31/20260818T080518583340Z_GI01D7553.jpg
+32,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:06:03,2026-08-18 13:36:03,detections/31/20260818T080603333318Z_GI01D7553.jpg
+33,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 08:14:47,2026-08-18 13:44:47,detections/31/20260818T081447003446Z_GI01D7553.jpg
+34,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-18 10:54:02,2026-08-18 16:24:02,detections/31/20260818T105402830929Z_GI01D7553.jpg
+35,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32A6041,0.96,1,2026-08-18 10:55:39,2026-08-18 16:25:39,detections/7/20260818T105539397540Z_GJ32A6041.jpg
+36,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K9870,0.83,1,2026-08-18 10:55:48,2026-08-18 16:25:48,detections/7/20260818T105548488629Z_GJ32K9870.jpg
+37,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:02:32,2026-08-19 13:32:32,detections/31/20260819T080232762181Z_GI01D7553.jpg
+38,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:11:10,2026-08-19 13:41:10,detections/31/20260819T081110135353Z_GI01D7553.jpg
+39,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:17:07,2026-08-19 13:47:07,detections/31/20260819T081707675040Z_GI01D7553.jpg
+40,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:22:13,2026-08-19 13:52:13,detections/31/20260819T082213724815Z_GI01D7553.jpg
+41,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:27:30,2026-08-19 13:57:30,detections/31/20260819T082730950892Z_GI01D7553.jpg
+42,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:37:32,2026-08-19 14:07:32,detections/31/20260819T083732256673Z_GI01D7553.jpg
+43,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 08:58:27,2026-08-19 14:28:27,detections/31/20260819T085827271517Z_GI01D7553.jpg
+44,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:08:39,2026-08-19 14:38:39,detections/31/20260819T090839473972Z_GI01D7553.jpg
+45,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:11:22,2026-08-19 14:41:22,detections/31/20260819T091122710528Z_GI01D7553.jpg
+46,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:16:51,2026-08-19 14:46:51,detections/31/20260819T091651152196Z_GI01D7553.jpg
+47,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:19:01,2026-08-19 14:49:01,detections/31/20260819T091901456097Z_GI01D7553.jpg
+48,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:21:15,2026-08-19 14:51:15,detections/31/20260819T092115264140Z_GI01D7553.jpg
+49,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:24:07,2026-08-19 14:54:07,detections/31/20260819T092407541669Z_GI01D7553.jpg
+50,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:27:12,2026-08-19 14:57:12,detections/31/20260819T092712940786Z_GI01D7553.jpg
+51,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:32:21,2026-08-19 15:02:21,detections/31/20260819T093221923128Z_GI01D7553.jpg
+52,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:35:29,2026-08-19 15:05:29,detections/31/20260819T093529701623Z_GI01D7553.jpg
+53,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:37:22,2026-08-19 15:07:22,detections/31/20260819T093722904241Z_GI01D7553.jpg
+54,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:39:01,2026-08-19 15:09:01,detections/31/20260819T093901035898Z_GI01D7553.jpg
+55,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:43:49,2026-08-19 15:13:49,detections/31/20260819T094349353231Z_GI01D7553.jpg
+56,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:47:04,2026-08-19 15:17:04,detections/31/20260819T094704255711Z_GI01D7553.jpg
+57,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:54:21,2026-08-19 15:24:21,detections/31/20260819T095421311918Z_GI01D7553.jpg
+58,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 09:57:32,2026-08-19 15:27:32,detections/31/20260819T095732969678Z_GI01D7553.jpg
+59,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:03:04,2026-08-19 15:33:04,detections/31/20260819T100304287613Z_GI01D7553.jpg
+60,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:04:07,2026-08-19 15:34:07,detections/31/20260819T100407016278Z_GJ01D7553.jpg
+61,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:05:29,2026-08-19 15:35:29,detections/31/20260819T100529890948Z_GJ01D7553.jpg
+62,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:07:36,2026-08-19 15:37:36,detections/31/20260819T100736363315Z_GJ01D7553.jpg
+63,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:10:25,2026-08-19 15:40:25,detections/31/20260819T101025742792Z_GJ01D7553.jpg
+64,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:22:47,2026-08-19 15:52:47,detections/31/20260819T102247565780Z_GJ01D7553.jpg
+65,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:28:28,2026-08-19 15:58:28,detections/31/20260819T102828770727Z_GJ01D7553.jpg
+66,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-19 10:38:09,2026-08-19 16:08:09,detections/31/20260819T103809716193Z_GJ01D7553.jpg
+67,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 05:23:25,2026-08-20 10:53:25,detections/31/20260820T052325943177Z_GJ01D7553.jpg
+68,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 05:30:55,2026-08-20 11:00:55,detections/31/20260820T053055128327Z_GJ01D7553.jpg
+69,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 05:34:58,2026-08-20 11:04:58,detections/31/20260820T053458609645Z_GJ01D7553.jpg
+70,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 06:11:09,2026-08-20 11:41:09,detections/31/20260820T061109517865Z_GJ01D7553.jpg
+71,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 06:15:41,2026-08-20 11:45:41,detections/31/20260820T061541414183Z_GJ01D7553.jpg
+72,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 06:21:58,2026-08-20 11:51:58,detections/31/20260820T062158395891Z_GJ01D7553.jpg
+73,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 06:28:03,2026-08-20 11:58:03,detections/31/20260820T062803226394Z_GJ01D7553.jpg
+74,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 06:39:29,2026-08-20 12:09:29,detections/31/20260820T063928652095Z_GJ01D7553.jpg
+75,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:07:07,2026-08-20 12:37:07,detections/31/20260820T070707671834Z_GJ01D7553.jpg
+76,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:08:46,2026-08-20 12:38:46,detections/31/20260820T070846475628Z_GJ01D7553.jpg
+77,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ3ZAG4949,0.97,1,2026-08-20 07:11:51,2026-08-20 12:41:51,detections/7/20260820T071151057792Z_GJ3ZAG4949.jpg
+78,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32A6508,0.81,1,2026-08-20 07:11:54,2026-08-20 12:41:54,detections/7/20260820T071154534073Z_GJ32A6508.jpg
+79,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ06BY3848,0.98,1,2026-08-20 07:12:08,2026-08-20 12:42:08,detections/7/20260820T071208003551Z_GJ06BY3848.jpg
+80,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ01KO0278,0.98,1,2026-08-20 07:12:13,2026-08-20 12:42:13,detections/7/20260820T071213467010Z_GJ01KO0278.jpg
+81,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:12:23,2026-08-20 12:42:23,detections/31/20260820T071223789671Z_GJ01D7553.jpg
+82,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K0451,0.88,1,2026-08-20 07:12:48,2026-08-20 12:42:48,detections/7/20260820T071248428763Z_GJ32K0451.jpg
+83,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K7804,0.97,1,2026-08-20 07:12:51,2026-08-20 12:42:51,detections/7/20260820T071251660643Z_GJ32K7804.jpg
+84,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:14:26,2026-08-20 12:44:26,detections/31/20260820T071426833612Z_GJ01D7553.jpg
+85,Demo: RTSP Source,04 Paldi Circle (RTSP relay),Ahmedabad,GJ01O7512,0.84,1,2026-08-20 07:14:36,2026-08-20 12:44:36,detections/36/20260820T071436737090Z_GJ01O7512.jpg
+86,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:18:23,2026-08-20 12:48:23,detections/31/20260820T071823144943Z_GJ01D7553.jpg
+87,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:22:44,2026-08-20 12:52:44,detections/31/20260820T072244035700Z_GJ01D7553.jpg
+88,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:24:28,2026-08-20 12:54:28,detections/31/20260820T072428153066Z_GJ01D7553.jpg
+89,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K9870,0.96,1,2026-08-20 07:26:22,2026-08-20 12:56:22,detections/7/20260820T072622011728Z_GJ32K9870.jpg
+90,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ27TG1876,0.97,1,2026-08-20 07:26:38,2026-08-20 12:56:38,detections/7/20260820T072638163888Z_GJ27TG1876.jpg
+91,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:27:00,2026-08-20 12:57:00,detections/31/20260820T072700021451Z_GJ01D7553.jpg
+92,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:30:27,2026-08-20 13:00:27,detections/31/20260820T073027713360Z_GJ01D7553.jpg
+93,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:33:06,2026-08-20 13:03:06,detections/31/20260820T073306123724Z_GJ01D7553.jpg
+94,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:35:30,2026-08-20 13:05:30,detections/31/20260820T073530357547Z_GJ01D7553.jpg
+95,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32AG0416,0.96,1,2026-08-20 07:35:38,2026-08-20 13:05:38,detections/7/20260820T073538183342Z_GJ32AG0416.jpg
+96,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32B9799,0.92,1,2026-08-20 07:35:43,2026-08-20 13:05:43,detections/7/20260820T073543320189Z_GJ32B9799.jpg
+97,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ3ZAG4949,1.00,1,2026-08-20 07:35:50,2026-08-20 13:05:50,detections/7/20260820T073550145670Z_GJ3ZAG4949.jpg
+98,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ72CP8008,0.87,1,2026-08-20 07:35:54,2026-08-20 13:05:54,detections/7/20260820T073554033412Z_GJ72CP8008.jpg
+99,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:41:06,2026-08-20 13:11:06,detections/31/20260820T074105532024Z_GJ01D7553.jpg
+100,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Ahmedabad,GJ01D7553,0.72,2,2026-08-20 07:44:25,2026-08-20 13:14:25,detections/31/20260820T074425989543Z_GJ01D7553.jpg
+101,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ12A6411,0.74,1,2026-08-20 07:47:27,2026-08-20 13:17:27,detections/7/20260820T074727706340Z_GJ12A6411.jpg
