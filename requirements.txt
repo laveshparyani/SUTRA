@@ -10,6 +10,7 @@ opencv-python
 numpy
 python-multipart
 websockets
+pyjwt
 
 # Phase B (AI pipeline) — ONNX ANPR, CPU-only
 fast-plate-ocr
