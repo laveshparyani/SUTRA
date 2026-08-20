@@ -15,6 +15,27 @@ from ..services.discovery import fetch_portal_cameras, upsert_cameras
 
 router = APIRouter(prefix="/api/atlas", tags=["atlas"])
 
+_ALLOWED_SCHEMES = ("rtsp://", "http://", "https://")
+
+
+def _validate_source(source_type: str, source_url: str) -> None:
+    """Onboarding cannot point the ingest engine at arbitrary targets:
+    network sources are restricted to camera protocols, and file sources are
+    confined to the media directory (no reading arbitrary server paths)."""
+    if not source_url:
+        return
+    from pathlib import Path
+
+    from ..config import settings
+
+    if source_type == "file":
+        target = Path(source_url).resolve()
+        root = Path(settings.data_dir).resolve()
+        if root not in target.parents:
+            raise HTTPException(422, "file sources must live under the media data directory")
+    elif not source_url.lower().startswith(_ALLOWED_SCHEMES):
+        raise HTTPException(422, f"source_url must use one of: {', '.join(_ALLOWED_SCHEMES)}")
+
 
 @router.get("/cameras", response_model=list[CameraOut])
 def list_cameras(
@@ -60,6 +81,7 @@ def create_camera(
 ):
     if db.query(Camera).filter(Camera.external_id == body.external_id).first():
         raise HTTPException(409, "external_id already registered")
+    _validate_source(body.source_type, body.source_url)
     data = body.model_dump()
     if data.get("lat") is None or data.get("lon") is None:
         lat, lon, district, dept = locate(data.get("location", ""))
@@ -87,6 +109,8 @@ def update_camera(
     if not cam:
         raise HTTPException(404, "camera not found")
     changes = body.model_dump(exclude_unset=True)
+    if "source_url" in changes or "source_type" in changes:
+        _validate_source(changes.get("source_type", cam.source_type), changes.get("source_url", cam.source_url))
     for k, v in changes.items():
         setattr(cam, k, v)
     if "lat" in changes or "lon" in changes:
@@ -123,6 +147,11 @@ async def bulk_import(
     for row in reader:
         ext_id = (row.get("external_id") or "").strip()
         if not ext_id or db.query(Camera).filter(Camera.external_id == ext_id).first():
+            skipped += 1
+            continue
+        try:
+            _validate_source(row.get("source_type", "rtsp"), row.get("source_url", ""))
+        except HTTPException:
             skipped += 1
             continue
         lat = float(row["lat"]) if row.get("lat") else None

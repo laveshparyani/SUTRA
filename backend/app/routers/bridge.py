@@ -7,9 +7,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.orm import Session
 
+from fastapi import Request
+
 from ..db import get_db
 from ..models import Camera, User
-from ..security import require_roles
+from ..security import current_user, require_roles, verify_media_access
 from ..services import sampler
 from ..services.scheduler import engine as scheduler
 
@@ -17,12 +19,12 @@ router = APIRouter(prefix="/api/bridge", tags=["bridge"])
 
 
 @router.get("/status")
-def ingest_status():
+def ingest_status(user: User = Depends(current_user)):
     return {"workers": sampler.worker_status(), "scheduler": scheduler.status()}
 
 
 @router.get("/scheduler")
-def scheduler_status():
+def scheduler_status(user: User = Depends(current_user)):
     return scheduler.status()
 
 
@@ -85,7 +87,9 @@ def start_all(
 
 
 @router.get("/cameras/{camera_id}/snapshot")
-def snapshot(camera_id: int):
+def snapshot(camera_id: int, request: Request):
+    if not verify_media_access(request):
+        raise HTTPException(401, "not authenticated")
     latest = sampler.get_latest_frame(camera_id)
     if latest is None:
         raise HTTPException(404, "no frame available yet — is monitoring started?")
@@ -94,12 +98,14 @@ def snapshot(camera_id: int):
 
 
 @router.get("/cameras/{camera_id}/mjpeg")
-async def mjpeg(camera_id: int):
+async def mjpeg(camera_id: int, request: Request):
     """Lightweight live preview: multipart MJPEG built from the sampler's frame cache.
 
     Serves the video wall without per-viewer transcoding — many viewers share
     one ingest connection per camera.
     """
+    if not verify_media_access(request):
+        raise HTTPException(401, "not authenticated")
 
     async def gen():
         last_sent = 0.0

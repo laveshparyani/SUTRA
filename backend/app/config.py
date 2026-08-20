@@ -42,8 +42,14 @@ class Settings(BaseSettings):
     scene_interval_s: float = 20.0     # min seconds between scene analyses per camera
 
     # Auth
-    jwt_secret: str = "sutra-sandbox-secret-rotate-in-production"
+    jwt_secret: str = ""          # empty => auto-generated per install (data/.jwt_secret)
     token_ttl_s: int = 12 * 3600
+    media_token_ttl_s: int = 12 * 3600
+    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # optional seed-password overrides (else generated defaults are logged as a warning)
+    seed_admin_pw: str = ""
+    seed_operator_pw: str = ""
+    seed_viewer_pw: str = ""
 
     model_config = {"env_prefix": "SUTRA_", "env_file": ".env"}
 
@@ -59,3 +65,15 @@ class Settings(BaseSettings):
 settings = Settings()
 settings.data_dir.mkdir(parents=True, exist_ok=True)
 settings.frames_dir.mkdir(parents=True, exist_ok=True)
+
+# JWT secret: never a hardcoded default. Use the env-provided value, else an
+# auto-generated per-install secret persisted outside version control.
+if not settings.jwt_secret:
+    _keyfile = settings.data_dir / ".jwt_secret"
+    if _keyfile.exists():
+        settings.jwt_secret = _keyfile.read_text().strip()
+    else:
+        import secrets as _secrets
+
+        settings.jwt_secret = _secrets.token_urlsafe(48)
+        _keyfile.write_text(settings.jwt_secret)

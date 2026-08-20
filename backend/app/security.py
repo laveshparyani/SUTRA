@@ -48,6 +48,33 @@ def create_token(user: User) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
+def create_media_token(user: User) -> str:
+    """Scoped token for media/WS delivered as an HttpOnly cookie: <img> tags and
+    WebSocket handshakes can't set Authorization headers, and an HttpOnly cookie
+    is invisible to page scripts (XSS can't exfiltrate it)."""
+    payload = {
+        "uid": user.id,
+        "scope": "media",
+        "exp": int(time.time()) + settings.media_token_ttl_s,
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
+
+def verify_media_access(request_or_ws) -> bool:
+    """Accept the media cookie or a bearer token on media/WS endpoints."""
+    token = request_or_ws.cookies.get("sutra_media")
+    if not token:
+        auth = request_or_ws.headers.get("authorization", "")
+        token = auth[7:] if auth.startswith("Bearer ") else None
+    if not token:
+        return False
+    try:
+        jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        return True
+    except jwt.PyJWTError:
+        return False
+
+
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
@@ -78,14 +105,25 @@ def require_roles(*roles: str):
 
 
 def seed_default_users(db: Session) -> None:
-    """Create demo users on first boot (also the judges' test credentials)."""
+    """Create initial users on first boot.
+
+    Passwords come from SUTRA_SEED_*_PW env vars when set; the documented
+    sandbox defaults are used otherwise, with a loud warning — a hosted or
+    production instance must never run on published credentials.
+    """
+    import logging
+
     if db.query(User).count():
         return
     demo = [
-        ("admin", "SutraAdmin@26", "admin", ""),
-        ("operator_police", "Operator@26", "operator", "Police"),
-        ("viewer", "Viewer@26", "viewer", ""),
+        ("admin", settings.seed_admin_pw or "SutraAdmin@26", "admin", ""),
+        ("operator_police", settings.seed_operator_pw or "Operator@26", "operator", "Police"),
+        ("viewer", settings.seed_viewer_pw or "Viewer@26", "viewer", ""),
     ]
+    if not (settings.seed_admin_pw and settings.seed_operator_pw and settings.seed_viewer_pw):
+        logging.getLogger("sutra.security").warning(
+            "seeding with DOCUMENTED SANDBOX PASSWORDS — set SUTRA_SEED_*_PW env vars before hosting publicly"
+        )
     for username, password, role, dept in demo:
         db.add(User(username=username, password_hash=hash_password(password), role=role, department=dept))
     db.commit()

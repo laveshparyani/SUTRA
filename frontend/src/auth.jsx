@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem("sutra_user");
     setUser(null);
   };

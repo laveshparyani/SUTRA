@@ -107,8 +107,14 @@ def vehicle_info(plate: str, user: User = Depends(current_user)):
 
 @router.websocket("/ws")
 async def alerts_ws(ws: WebSocket):
-    """Real-time alert push for the Command UI."""
+    """Real-time alert push for the Command UI. Authenticated via the HttpOnly
+    media cookie (sent automatically on same-origin WS handshakes)."""
+    from ..security import verify_media_access
+
     global _loop
+    if not verify_media_access(ws):
+        await ws.close(code=4401)
+        return
     await ws.accept()
     _loop = asyncio.get_running_loop()
     _ws_clients.add(ws)
