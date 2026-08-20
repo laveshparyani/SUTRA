@@ -22,3 +22,6 @@ dist/
 .env
 *.local
 infra/mediamtx/
+
+# runtime secret — never commit
+data/.jwt_secret

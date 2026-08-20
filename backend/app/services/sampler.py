@@ -16,10 +16,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-# RTSP must ride TCP: RTP-over-UDP is silently dropped by host firewalls,
-# giving an open connection that never delivers a frame. Ignored by other
-# protocols, so safe to set globally for the FFmpeg capture backend.
-os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
+# FFmpeg capture tuning, applied before cv2 imports its backend:
+#   rtsp_transport=tcp — RTP-over-UDP is silently dropped by host firewalls,
+#     giving an open connection that never delivers a frame.
+#   timeout/stimeout (µs) — OpenCV serialises VideoCapture opens behind one
+#     global lock, so a dead source blocking on the 30s default starves every
+#     other camera's (re)open. Short timeouts keep that lock moving.
+os.environ.setdefault(
+    "OPENCV_FFMPEG_CAPTURE_OPTIONS",
+    "rtsp_transport;tcp|timeout;8000000|stimeout;8000000",
+)
 
 import cv2  # noqa: E402
 
@@ -60,12 +66,18 @@ class CameraWorker(threading.Thread):
 
     def run(self) -> None:
         log.info("cam %s: ingest starting (%s)", self.camera_id, self.source_url)
+        # OpenCV serialises VideoCapture opens behind a global FFmpeg lock; a
+        # dead network source holding it for its 30s timeout starves every
+        # other camera's (re)open. Failing sources must back off exponentially.
+        consecutive_failures = 0
         while not self.stop_flag.is_set():
             cap = cv2.VideoCapture(self.source_url, cv2.CAP_FFMPEG)
             if not cap.isOpened():
-                self.last_error = "failed to open source"
+                consecutive_failures += 1
+                backoff = min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0)
+                self.last_error = f"failed to open source (retry in {backoff:.0f}s)"
                 self._update_health("down", self.last_error)
-                if self.stop_flag.wait(settings.reconnect_backoff_s):
+                if self.stop_flag.wait(backoff):
                     break
                 continue
 
@@ -80,6 +92,7 @@ class CameraWorker(threading.Thread):
             keep_every = max(1, round(native_fps * settings.file_sample_interval_s))
             frame_idx = 0
             warmup = 0 if is_file else 10  # live mid-GOP joins decode corrupt (HEVC especially)
+            frames_at_open = self.frames_seen
             try:
                 while not self.stop_flag.is_set():
                     ok, frame = cap.read()
@@ -87,6 +100,12 @@ class CameraWorker(threading.Thread):
                         warmup -= 1
                         continue
                     if not ok:
+                        # a file source has simply reached its end: rewind in
+                        # place rather than reopening, which would queue behind
+                        # OpenCV's global open lock
+                        if is_file and cap.set(cv2.CAP_PROP_POS_FRAMES, 0):
+                            frame_idx = 0
+                            continue
                         self.last_error = "stream read failed; reconnecting"
                         self._update_health("degraded", self.last_error)
                         break
@@ -124,8 +143,15 @@ class CameraWorker(threading.Thread):
             finally:
                 cap.release()
 
+            # a session that delivered frames resets the backoff; one that
+            # opened but produced nothing counts as a failure
+            if self.frames_seen > frames_at_open:
+                consecutive_failures = 0
+            else:
+                consecutive_failures += 1
             if not self.stop_flag.is_set():
-                self.stop_flag.wait(settings.reconnect_backoff_s)
+                backoff = min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0)
+                self.stop_flag.wait(backoff if consecutive_failures else settings.reconnect_backoff_s)
 
         self._update_health("unknown", "monitoring stopped")
         log.info("cam %s: ingest stopped", self.camera_id)

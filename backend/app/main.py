@@ -1,9 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from .config import settings
 from .db import Base, engine
@@ -56,10 +57,20 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # prototype only — restrict before hosting
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
 
 app.include_router(auth.router)
 app.include_router(atlas.router)
@@ -67,8 +78,23 @@ app.include_router(bridge.router)
 app.include_router(insight.router)
 app.include_router(watch.router)
 
-# evidence snapshots (detection crops, alert frames)
-app.mount("/data", StaticFiles(directory=settings.data_dir), name="data")
+# evidence snapshots (detection crops, alert frames) — authenticated, path-safe
+_DATA_ROOT = Path(settings.data_dir).resolve()
+
+
+@app.get("/data/{rel_path:path}")
+def evidence_file(rel_path: str, request: Request):
+    from .security import verify_media_access
+
+    if not verify_media_access(request):
+        raise HTTPException(401, "not authenticated")
+    target = (_DATA_ROOT / rel_path).resolve()
+    # confine to the data directory and to image evidence only
+    if _DATA_ROOT not in target.parents or target.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+        raise HTTPException(404, "not found")
+    if not target.is_file():
+        raise HTTPException(404, "not found")
+    return FileResponse(target, headers={"Cache-Control": "private, max-age=300"})
 
 
 @app.get("/api/health")

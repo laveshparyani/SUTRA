@@ -7,6 +7,11 @@ const ATTR = '&copy; OpenStreetMap &copy; CARTO';
 const healthClass = (cam) =>
   cam.health === "ok" ? "ok" : cam.health === "degraded" ? "warn" : cam.health === "down" ? "down" : "idle";
 
+// Leaflet popups render raw HTML; camera names/locations arrive from CSV
+// imports and external APIs, so they must be escaped before interpolation
+const esc = (v) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 function camIcon(cam) {
   return L.divIcon({
     className: "",
@@ -56,8 +61,8 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
       if (cam.lat == null || cam.lon == null) continue;
       const m = L.marker([cam.lat, cam.lon], { icon: camIcon(cam) }).addTo(layer);
       m.bindPopup(
-        `<b>${cam.name}</b><br/>${cam.location}<br/>` +
-          `<span style="opacity:.7">${cam.department} · ${cam.district || "—"} · ${cam.health}</span>`
+        `<b>${esc(cam.name)}</b><br/>${esc(cam.location)}<br/>` +
+          `<span style="opacity:.7">${esc(cam.department)} · ${esc(cam.district) || "—"} · ${esc(cam.health)}</span>`
       );
       if (onCamClick) m.on("click", () => onCamClick(cam));
     }
@@ -68,7 +73,7 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
         if (s.lat == null) return;
         L.marker([s.lat, s.lon], { icon: seqIcon(i + 1), zIndexOffset: 500 })
           .addTo(layer)
-          .bindPopup(`<b>#${i + 1} ${s.location}</b><br/>${s.first_seen} → ${s.last_seen}`);
+          .bindPopup(`<b>#${i + 1} ${esc(s.location)}</b><br/>${esc(s.first_seen)} → ${esc(s.last_seen)}`);
       });
       if (pts.length > 1) {
         L.polyline(pts, { color: "#f0a428", weight: 3, opacity: 0.9, dashArray: "8 6" }).addTo(layer);

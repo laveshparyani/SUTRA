@@ -29,3 +29,37 @@ Status legend: ⬜ pending · 🔄 in progress · ✅ done · ⚠️ blocked
 | D7 | Scalability plan doc | ✅ folded into HLD §8 | expand to standalone if guidelines require |
 | D8 | Hosting + judge credentials (Cloudflare Tunnel) | ⬜ pending | free tier; admin/operator/viewer creds ready |
 | D9 | Final submission package (links, YouTube unlisted, repo public) | ⬜ pending | checklist in official Step 5 |
+
+## Security hardening sprint (pre-submission audit, 20 Aug)
+
+| Issue found | Severity | Fix | Verified |
+|---|---|---|---|
+| Hardcoded JWT secret in repo → token forgery | CRITICAL | per-install auto-generated secret (data/.jwt_secret, gitignored); env override | ✅ test |
+| /data evidence store fully public | CRITICAL | authenticated route, path-confined, image-only | ✅ tests incl. encoded traversal |
+| Camera snapshot/MJPEG endpoints public | HIGH | HttpOnly media-cookie auth (+ bearer) | ✅ test + UI |
+| Alert WebSocket public (plate/location leak) | HIGH | cookie-authenticated handshake (4401 on fail) | ✅ browser check |
+| No login rate limit → brute force | HIGH | 5 fails/5 min per client, 429, audited | ✅ test |
+| XSS via Leaflet popups (camera names from CSV/portal) | HIGH | HTML-escape all popup interpolation | ✅ code |
+| SSRF/file-read via source_url onboarding | MEDIUM | scheme allowlist + file sources confined to data dir | ✅ tests |
+| CORS wildcard | MEDIUM | restricted to configured origins | ✅ |
+| Bridge status/scheduler endpoints public (recon) | LOW | authenticated | ✅ test |
+| Seeded passwords documented in repo | NOTE | env-overridable + loud warning; MUST set SUTRA_SEED_*_PW on any public host | docs |
+| **Reliability**: OpenCV global open-lock starvation (dead portal cams blocked file/RTSP reop
+
+## Security hardening sprint (pre-submission audit, 20 Aug)
+
+Full write-up: docs/SECURITY.md · 19 automated tests in backend/tests/
+
+| Issue found | Severity | Fix | Verified by |
+|---|---|---|---|
+| Hardcoded JWT secret in repo (token forgery for any deployment) | CRITICAL | per-install generated secret, gitignored, env-overridable | test_security |
+| /data evidence store served unauthenticated | CRITICAL | authenticated route + path confinement + image allowlist | tests incl. encoded traversal |
+| Camera snapshot/MJPEG endpoints unauthenticated | HIGH | HttpOnly media cookie (or bearer) | test + browser |
+| Alert WebSocket unauthenticated (plates/locations leak) | HIGH | authenticated handshake, 4401 close | browser check |
+| No login rate limiting | HIGH | 5 fails / 5 min per client -> 429, audited | test |
+| XSS via Leaflet popups (names from CSV/portal) | HIGH | HTML-escape all interpolation | code review |
+| SSRF / arbitrary file read via source_url | MEDIUM | scheme allowlist + file confinement | 2 tests |
+| CORS wildcard with credentials | MEDIUM | restricted to configured origins | code |
+| Bridge status/scheduler endpoints public (recon) | LOW | authenticated | test |
+| Seed passwords documented in repo | NOTE | env-overridable + startup warning | docs/SECURITY.md |
+| Reliability: OpenCV global open-lock starvation - dead cameras blocked healthy ones reopening | HIGH | 8s network open timeouts + exponential backoff + file sources rewind in place instead of reopening | live verify |
