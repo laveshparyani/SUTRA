@@ -1,0 +1,17 @@
+# SUTRA backend — Phase A (registry + ingestion)
+fastapi
+uvicorn[standard]
+sqlalchemy
+aiosqlite
+pydantic
+pydantic-settings
+httpx
+opencv-python
+numpy
+python-multipart
+websockets
+
+# Phase B (AI pipeline) — ONNX ANPR, CPU-only
+fast-plate-ocr
+open-image-models
+onnxruntime
