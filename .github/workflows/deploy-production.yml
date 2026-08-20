@@ -1,0 +1,68 @@
+name: Deploy → production
+
+# main is deployed only after CI passes AND a human approves the run.
+# Approval is enforced by the "production" GitHub Environment
+# (Settings → Environments → production → Required reviewers).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: production          # <- required-reviewer gate lives here
+      url: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd ${{ vars.PRODUCTION_PATH || '/opt/sutra' }}
+            # keep the previous image so a failed release can be rolled back
+            docker tag sutra-api:latest sutra-api:rollback || true
+            git fetch --all --prune
+            git checkout main
+            git reset --hard origin/main
+            docker compose --env-file .env.production build
+            docker compose --env-file .env.production up -d --remove-orphans
+            docker image prune -f
+
+      - name: Smoke test
+        id: smoke
+        run: |
+          for i in $(seq 1 24); do
+            if curl -fsS "${{ vars.PRODUCTION_URL }}/api/health" | grep -q '"ok"'; then
+              echo "production healthy"; exit 0
+            fi
+            sleep 5
+          done
+          exit 1
+
+      - name: Roll back on failed smoke test
+        if: failure() && steps.smoke.outcome == 'failure'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ vars.PRODUCTION_PATH || '/opt/sutra' }}
+            docker tag sutra-api:rollback sutra-api:latest
+            docker compose --env-file .env.production up -d

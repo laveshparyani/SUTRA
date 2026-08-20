@@ -1,0 +1,51 @@
+name: Deploy → staging
+
+# dev branch is continuously deployed to the staging host once CI passes.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd ${{ vars.STAGING_PATH || '/opt/sutra-staging' }}
+            git fetch --all --prune
+            git checkout dev
+            git reset --hard origin/dev
+            docker compose --env-file .env.staging build
+            docker compose --env-file .env.staging up -d --remove-orphans
+            docker image prune -f
+
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS "${{ vars.STAGING_URL }}/api/health" | grep -q '"ok"'; then
+              echo "staging healthy"; exit 0
+            fi
+            sleep 5
+          done
+          echo "staging did not become healthy"; exit 1
