@@ -1,0 +1,37 @@
+external_id,name,location,department,district,lat,lon,camera_type,ownership,install_date,source_type,codec,container,storage_type,retention_days,status,health,monitoring,onboarded_via
+sentinel-1,Camera 1,01 Chiman bhai Bridge,Municipal,Ahmedabad,23.0455,72.531,,government,,http-progressive,h264,mp4,unknown,,live,ok,True,discovery
+sentinel-2,Camera 2,02 Janpath,Municipal,Ahmedabad,23.033,72.561,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-3,Camera 3,03 O.N.G.C. Office,Police,Ahmedabad,23.048,72.529,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-4,Camera 4,04 Paldi Circle,Police,Ahmedabad,23.0117,72.5624,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-5,Camera 5,05 Visat teen Rasta,Police,Gandhinagar,23.111,72.585,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-6,Camera 6,06 Timbavadi gate-Junagadh,Municipal,Junagadh,21.489,70.458,,government,,http-progressive,avi,avi,unknown,,live,unknown,True,discovery
+sentinel-7,Camera 7,07 hero-showroom-gir-somnath,Police,Gir Somnath,20.916,70.367,,government,,http-progressive,h264,mp4,unknown,,live,ok,True,discovery
+sentinel-8,Camera 8,08 majewadi-gate-junagadh,Municipal,Junagadh,21.529,70.464,,government,,http-progressive,h264,mp4,unknown,,live,ok,True,discovery
+sentinel-9,Camera 9,09 new-bypass-near-by-circle-junagadh-2,Municipal,Junagadh,21.5222,70.4579,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-10,Camera 10,10 char-chowk-road-2-junagadh,Municipal,Junagadh,21.5222,70.4579,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-11,Camera 11,11 dolatpara-junagadh,Municipal,Junagadh,21.5222,70.4579,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-12,Camera 12,12 Tri Mandir Adalaj Tollnaka,GSRTC,Gandhinagar,23.164,72.581,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-13,Camera 13,13 CN Vidhyalaya,Municipal,Ahmedabad,23.021,72.557,,government,,http-progressive,h264,mkv,unknown,,live,ok,True,discovery
+sentinel-14,Camera 14,14 Delight,Municipal,Ahmedabad,23.027,72.587,,government,,http-progressive,h264,mkv,unknown,,live,unknown,True,discovery
+sentinel-15,Camera 15,15 Suvidha park,Municipal,Ahmedabad,23.006,72.525,,government,,http-progressive,h264,mkv,unknown,,live,unknown,True,discovery
+sentinel-16,Camera 16,16 Visat P2,Police,Gandhinagar,23.111,72.585,,government,,http-progressive,h264,mkv,unknown,,live,unknown,True,discovery
+sentinel-17,Camera 17,17 Rajkot CCTV,Police,Rajkot,22.3039,70.8022,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-18,Camera 18,18 Rajkot CCTV,Police,Rajkot,22.3039,70.8022,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-19,Camera 19,"19 KHAPARIA GRAM PANCHAYAT , TALUKA GANDEVI, DISTRICT NAVSARI",Panchayat,Navsari,20.812,72.986,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-20,Camera 20,20 Mohanpura,Panchayat,Surendranagar,22.775,71.648,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-21,Camera 21,23 Patan Dethali Char Rasta,Police,Patan,23.85,72.125,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-22,Camera 22,28 BK Mervada tran Rasta,Panchayat,Patan,23.842,72.11,,government,,http-progressive,avi,avi,unknown,,live,unknown,True,discovery
+sentinel-23,Camera 23,30 kheram,Panchayat,Patan,23.83,72.14,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-24,Camera 24,33 dehgam,Panchayat,Gandhinagar,23.169,72.821,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-25,Camera 25,34 dhanori,Panchayat,Gandhinagar,23.15,72.85,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-26,Camera 26,35 TANKAL,Panchayat,Navsari,20.77,72.97,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-27,Camera 27,36 bilimora,Municipal,Navsari,20.769,72.961,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-28,Camera 28,37 bilimora,Municipal,Navsari,20.769,72.961,,government,,http-progressive,h264,mp4,unknown,,live,unknown,True,discovery
+sentinel-29,Camera 29,38 bilimora,Municipal,Navsari,20.769,72.961,,government,,http-progressive,h264,mp4,unknown,,live,ok,True,discovery
+sentinel-30,Camera 30,Gandhidham Rambaugh p2,Municipal,Kutch,23.0753,70.1337,,government,,http-progressive,h264,mp4,unknown,,live,ok,True,discovery
+demo-paldi-file,Demo: Paldi Morning Clip,04 Paldi Circle (recorded),Police,Ahmedabad,23.0117,72.5624,,government,,file,,,unknown,,unknown,ok,True,api
+soc-amd-001,Society Cam A1,Shantigram Society Gate 1 Ahmedabad,Private,Ahmedabad,23.152,72.541,dome,society,2018-06-01,rtsp,,,unknown,,unknown,unknown,False,bulk
+mall-amd-002,Mall Entry Cam,Alpha One Mall Entrance Vastrapur,Private,Ahmedabad,23.041,72.515,bullet,commercial,2016-02-15,rtsp,,,unknown,,unknown,unknown,False,bulk
+rto-srt-003,RTO Test Track Cam,RTO Surat Testing Track,RTO,Surat,21.19,72.81,ptz,government,2022-09-10,rtsp,,,unknown,,unknown,unknown,False,bulk
+fcs-vad-004,PDS Godown Cam,Food & Civil Supplies Godown Vadodara,Food & Civil Supplies,Vadodara,22.31,73.18,fixed,government,2015-01-20,rtsp,,,unknown,,unknown,unknown,False,bulk
+rtsp-demo-paldi,Demo: RTSP Source,04 Paldi Circle (RTSP relay),Police,Ahmedabad,23.0119,72.563,fixed,government,,rtsp,,,unknown,,unknown,ok,True,api

@@ -1,0 +1,16 @@
+sr_no,camera,location,district,plate_number,ocr_confidence,reads_in_vote,timestamp_utc,timestamp_ist,evidence_snapshot
+1,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32A6041,0.96,1,2026-08-18 10:55:39,2026-08-18 16:25:39,detections/7/20260818T105539397540Z_GJ32A6041.jpg
+2,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K9870,0.83,1,2026-08-18 10:55:48,2026-08-18 16:25:48,detections/7/20260818T105548488629Z_GJ32K9870.jpg
+3,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ3ZAG4949,0.97,1,2026-08-20 07:11:51,2026-08-20 12:41:51,detections/7/20260820T071151057792Z_GJ3ZAG4949.jpg
+4,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32A6508,0.81,1,2026-08-20 07:11:54,2026-08-20 12:41:54,detections/7/20260820T071154534073Z_GJ32A6508.jpg
+5,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ06BY3848,0.98,1,2026-08-20 07:12:08,2026-08-20 12:42:08,detections/7/20260820T071208003551Z_GJ06BY3848.jpg
+6,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ01KO0278,0.98,1,2026-08-20 07:12:13,2026-08-20 12:42:13,detections/7/20260820T071213467010Z_GJ01KO0278.jpg
+7,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K0451,0.88,1,2026-08-20 07:12:48,2026-08-20 12:42:48,detections/7/20260820T071248428763Z_GJ32K0451.jpg
+8,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K7804,0.97,1,2026-08-20 07:12:51,2026-08-20 12:42:51,detections/7/20260820T071251660643Z_GJ32K7804.jpg
+9,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32K9870,0.96,1,2026-08-20 07:26:22,2026-08-20 12:56:22,detections/7/20260820T072622011728Z_GJ32K9870.jpg
+10,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ27TG1876,0.97,1,2026-08-20 07:26:38,2026-08-20 12:56:38,detections/7/20260820T072638163888Z_GJ27TG1876.jpg
+11,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32AG0416,0.96,1,2026-08-20 07:35:38,2026-08-20 13:05:38,detections/7/20260820T073538183342Z_GJ32AG0416.jpg
+12,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ32B9799,0.92,1,2026-08-20 07:35:43,2026-08-20 13:05:43,detections/7/20260820T073543320189Z_GJ32B9799.jpg
+13,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ3ZAG4949,1.00,1,2026-08-20 07:35:50,2026-08-20 13:05:50,detections/7/20260820T073550145670Z_GJ3ZAG4949.jpg
+14,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ72CP8008,0.87,1,2026-08-20 07:35:54,2026-08-20 13:05:54,detections/7/20260820T073554033412Z_GJ72CP8008.jpg
+15,Camera 7,07 hero-showroom-gir-somnath,Gir Somnath,GJ12A6411,0.74,1,2026-08-20 07:47:27,2026-08-20 13:17:27,detections/7/20260820T074727706340Z_GJ12A6411.jpg

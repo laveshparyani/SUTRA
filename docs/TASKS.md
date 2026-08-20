@@ -15,3 +15,17 @@
 | T7 | Bonus analytics: person/vehicle detection (YOLOX-nano ONNX) | ✅ done | YOLOX-nano sidecar: 43ms/frame, throttled 1 frame/20s/camera; live counts on Video Wall + /api/insight/scene |
 
 Status legend: ⬜ pending · 🔄 in progress · ✅ done · ⚠️ blocked
+
+## Phase D — Submission deliverables (deadline 29 Aug)
+
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| D1 | Government-feed evidence capture | ✅ done | submission/: full report (101 rows), cam-7 gov report (15 rows), registry CSV, 19 evidence JPEGs |
+| D2 | Demo video shot scripts | ✅ done | docs/DEMO_SCRIPT.md — both videos, shot-by-shot with narration |
+| D3 | HLD document | ✅ drafted | docs/HLD.md — all required sections incl. measured numbers, 80k sizing, costs; convert to PDF at submission |
+| D4 | Record own-feed demo video (2-3 min) | ⬜ pending | Lavesh records per script; system stays demo-ready |
+| D5 | Record government-feed demo video | ⬜ pending | record around Camera 7 while portal healthy |
+| D6 | Solution Presentation (PPT/PDF) | ⬜ pending | build from HLD §1-2 + demo assets |
+| D7 | Scalability plan doc | ✅ folded into HLD §8 | expand to standalone if guidelines require |
+| D8 | Hosting + judge credentials (Cloudflare Tunnel) | ⬜ pending | free tier; admin/operator/viewer creds ready |
+| D9 | Final submission package (links, YouTube unlisted, repo public) | ⬜ pending | checklist in official Step 5 |
