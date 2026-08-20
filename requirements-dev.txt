@@ -1,0 +1,5 @@
+# Development and CI extras (not needed at runtime)
+-r requirements.txt
+pytest
+httpx
+py-spy
