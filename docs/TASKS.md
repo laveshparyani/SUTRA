@@ -5,7 +5,7 @@
 |---|------|--------|-------|
 | T1 | Output report generator (detections + timestamps, CSV export + UI button) | ✅ done | /api/insight/report CSV+JSON, UI button on Detections |
 | T2 | Git initial commit (+ GitHub if gh auth available) | ✅ done | commits 07e5860+1edaea7 pushed to github.com/laveshparyani/SUTRA (private) |
-| T3 | Multi-camera trace: cross-camera ANPR scan of 3 sample clips, find plate on ≥2 cameras | 🔄 in progress | long compute — runs in background |
+| T3 | Multi-camera trace: cross-camera ANPR scan of 3 sample clips, find plate on ≥2 cameras | ✅ done (verdict) | Scanned all 3 clips: Janpath+Chinman are ANPR-blind (angle); NO genuine cross-camera vehicle exists in sample footage. Demo = dual-path correlation (file cam 31 + RTSP cam 36, truck-centred loop) + eval-day network. Finding: seek-based scanning unreliable vs sequential decode |
 | T4 | VAHAN-style connector: interface + representative lookup + alert enrichment + docs | ✅ done | connectors/ pkg, VAHAN rep. data, alert enrichment, Trace panel, docs/CONNECTORS.md |
 | T5a | Camera model: camera_type / ownership / install_date fields + migration | ✅ done | fields + auto-migration on startup |
 | T5b | Registry CSV export endpoint + button | ✅ done | /api/atlas/export + Registry button |
