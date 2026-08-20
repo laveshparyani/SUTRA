@@ -1,0 +1,32 @@
+# SUTRA deployment stack. Used by both staging and production; the environment
+# file (.env.staging / .env.production) supplies secrets and the public origin.
+services:
+  api:
+    build: .
+    image: sutra-api:${SUTRA_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      SUTRA_DATA_DIR: /data
+    volumes:
+      - sutra-data:/data
+    ports:
+      - "127.0.0.1:${SUTRA_PORT:-8000}:8000"
+    # video decoding is memory-hungry: ~200 MB per concurrent 1080p camera
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on: [api]
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+
+volumes:
+  sutra-data:
