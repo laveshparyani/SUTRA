@@ -9,13 +9,19 @@ from ingestion.
 """
 
 import logging
+import os
 import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
-import cv2
+# RTSP must ride TCP: RTP-over-UDP is silently dropped by host firewalls,
+# giving an open connection that never delivers a frame. Ignored by other
+# protocols, so safe to set globally for the FFmpeg capture backend.
+os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
+
+import cv2  # noqa: E402
 
 from ..config import settings
 from ..db import SessionLocal
