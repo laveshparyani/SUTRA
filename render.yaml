@@ -1,0 +1,46 @@
+# SUTRA central tier — free-tier cloud deployment.
+#
+# This service runs the command centre only: registry, watchlist, alerts,
+# vehicle trace, evidence and reports. It performs no video decoding and loads
+# no AI models, which is what keeps it inside a 512 MB instance. Edge nodes do
+# the ingest and inference and push metadata up via /api/sync/push.
+#
+# Deploy: Render dashboard -> New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: sutra-central
+    runtime: python
+    plan: free
+    region: singapore          # closest free region to Gujarat
+    branch: main
+    buildCommand: |
+      pip install -r requirements-central.txt
+      cd frontend && npm ci && npm run build
+    startCommand: cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: SUTRA_ROLE
+        value: central
+      - key: SUTRA_DB_URL
+        fromDatabase:
+          name: sutra-db
+          property: connectionString
+      - key: SUTRA_JWT_SECRET
+        generateValue: true       # Render generates and stores it
+      - key: SUTRA_SYNC_API_KEY
+        generateValue: true       # copy into the edge node's .env
+      - key: SUTRA_SEED_ADMIN_PW
+        sync: false               # set in the dashboard
+      - key: SUTRA_SEED_OPERATOR_PW
+        sync: false
+      - key: SUTRA_SEED_VIEWER_PW
+        sync: false
+      - key: SUTRA_CORS_ORIGINS
+        value: '["https://sutra-central.onrender.com"]'
+      - key: PYTHON_VERSION
+        value: "3.13.4"
+
+databases:
+  - name: sutra-db
+    plan: free
+    region: singapore

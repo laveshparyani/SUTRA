@@ -6,6 +6,16 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """SUTRA backend configuration. Override via environment or .env."""
 
+    # Deployment role — mirrors the tiering in the HLD:
+    #   full    single machine does everything (development / on-prem all-in-one)
+    #   edge    ingest + inference only; pushes metadata upstream to a central tier
+    #   central command centre + registry + evidence; no video decode, no models
+    #           (this is what runs on a small cloud instance)
+    role: str = "full"
+    central_url: str = ""        # edge -> where to push metadata
+    sync_api_key: str = ""       # shared secret for the edge->central channel
+    sync_interval_s: float = 30.0
+
     portal_base: str = "https://live.sentinelgujarat.in"
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     db_url: str = ""  # derived from data_dir when empty
@@ -55,7 +65,21 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        return self.db_url or f"sqlite:///{self.data_dir / 'sutra.db'}"
+        url = self.db_url or f"sqlite:///{self.data_dir / 'sutra.db'}"
+        # managed Postgres providers hand out postgres:// URLs; SQLAlchemy 2 wants postgresql://
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return url
+
+    @property
+    def is_central(self) -> bool:
+        return self.role == "central"
+
+    @property
+    def runs_ingest(self) -> bool:
+        return self.role in ("full", "edge")
 
     @property
     def frames_dir(self) -> Path:

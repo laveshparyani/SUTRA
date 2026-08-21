@@ -63,3 +63,22 @@ Full write-up: docs/SECURITY.md · 19 automated tests in backend/tests/
 | Bridge status/scheduler endpoints public (recon) | LOW | authenticated | test |
 | Seed passwords documented in repo | NOTE | env-overridable + startup warning | docs/SECURITY.md |
 | Reliability: OpenCV global open-lock starvation - dead cameras blocked healthy ones reopening | HIGH | 8s network open timeouts + exponential backoff + file sources rewind in place instead of reopening | live verify |
+
+## CI/CD & hosting (20 Aug)
+
+| Item | Status | Notes |
+|---|---|---|
+| Branch model main/dev/feature | DONE | master renamed to main; dev created; both pushed |
+| CI pipeline | DONE | tests + frontend build + pip-audit + gitleaks full-history scan; all green |
+| Docker deployment stack | DONE | Dockerfile (non-root, healthcheck) + compose (api + nginx, MJPEG-safe proxy) |
+| Staging auto-deploy workflow | READY | fires on dev after CI; needs host secrets |
+| Production deploy workflow | READY | fires on main after CI, gated by GitHub Environment reviewer; auto-rollback on failed smoke test |
+| Deployment guide | DONE | docs/DEPLOYMENT.md: measured sizing, Oracle Always Free recommendation, setup steps |
+| Secret-safety of git history | VERIFIED | gitleaks full-history scan clean |
+
+### Needs Lavesh (cannot be automated)
+1. Make repo public -> unlocks free branch protection + unlimited CI minutes
+2. Provision host (Oracle Always Free ARM 4c/24GB recommended)
+3. Add GitHub secrets DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY
+4. Create staging + production Environments; set required reviewer on production
+5. Write .env.production on the host with non-default passwords
