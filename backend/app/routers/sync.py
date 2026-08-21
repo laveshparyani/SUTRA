@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..db import get_db
-from ..models import Alert, AuditLog, Camera, Detection, WatchlistVehicle
+from ..models import Alert, AuditLog, Camera, Detection, Evidence, WatchlistVehicle
 
 log = logging.getLogger("sutra.sync")
 router = APIRouter(prefix="/api/sync", tags=["sync"])
@@ -88,21 +88,22 @@ class SyncPayload(BaseModel):
     alerts: list[AlertIn] = []
 
 
-def _write_evidence(rel_path: str, b64: str | None) -> str:
-    """Persist an inlined thumbnail under the data dir, returning its rel path."""
+def _store_evidence(db: Session, rel_path: str, b64: str | None) -> str:
+    """Persist an inlined thumbnail in the database.
+
+    Deliberately not the filesystem: the central tier's disk is ephemeral, so
+    a redeploy would silently turn every alert into a broken image.
+    """
     if not b64 or not rel_path:
         return rel_path or ""
-    target = (settings.data_dir / rel_path).resolve()
-    root = settings.data_dir.resolve()
-    if root not in target.parents:          # never write outside the evidence store
+    if db.query(Evidence.id).filter(Evidence.path == rel_path).first():
+        return rel_path
+    try:
+        blob = base64.b64decode(b64)
+    except Exception:
+        log.warning("undecodable evidence for %s", rel_path)
         return ""
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if not target.exists():
-        try:
-            target.write_bytes(base64.b64decode(b64))
-        except Exception:
-            log.warning("could not decode evidence for %s", rel_path)
-            return ""
+    db.add(Evidence(path=rel_path, content=blob, size_bytes=len(blob)))
     return rel_path
 
 
@@ -153,7 +154,7 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
                 det_conf=d.det_conf,
                 bbox=d.bbox,
                 track_id=d.track_id,
-                snapshot_path=_write_evidence(d.snapshot_path, d.snapshot_b64),
+                snapshot_path=_store_evidence(db, d.snapshot_path, d.snapshot_b64),
             )
         )
         dets_new += 1
@@ -172,7 +173,7 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
             camera_id=cid,
             ts=a.ts,
             plate_text=a.plate,
-            snapshot_path=_write_evidence(a.snapshot_path, a.snapshot_b64),
+            snapshot_path=_store_evidence(db, a.snapshot_path, a.snapshot_b64),
         )
         db.add(det)
         db.flush()
