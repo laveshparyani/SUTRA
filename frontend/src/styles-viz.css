@@ -1,0 +1,335 @@
+/* ==========================================================================
+   Data visualisation + responsive layer.
+
+   The palette below is a validated instance: the six categorical slots pass
+   the lightness band, chroma floor, CVD separation, normal-vision floor and
+   3:1 contrast checks against this chart surface (#0f151c). Status roles are
+   reserved for state and are never reused as a series colour.
+   ========================================================================== */
+
+:root {
+  --series-1: #3987e5;   /* blue    */
+  --series-2: #d95926;   /* orange  */
+  --series-3: #199e70;   /* aqua    */
+  --series-4: #c98500;   /* yellow  */
+  --series-5: #d55181;   /* magenta */
+  --series-6: #9085e9;   /* violet  */
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  /* sequential ramp: one hue, light to dark */
+  --seq-1: #9dc7f2;
+  --seq-2: #5fa3e8;
+  --seq-3: #3987e5;
+  --seq-4: #1f5fa8;
+}
+
+/* ---------------------------------------------------------------- cards */
+
+.chart-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.chart-card {
+  margin: 0;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.chart-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-0);
+}
+.chart-head p {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.chart-body { padding: 14px 16px 16px; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+
+/* a time series needs width to be readable — give it two columns */
+.chart-card.wide { grid-column: span 2; }
+@media (max-width: 720px) { .chart-card.wide { grid-column: span 1; } }
+.chart-hint {
+  margin: 0;
+  padding: 0 16px 12px;
+  font-size: 11px;
+  color: var(--text-2);
+  font-style: italic;
+}
+.chart-empty {
+  padding: 26px 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+/* ---------------------------------------------------------------- plot */
+
+.chart-plot { position: relative; }
+.chart-plot svg { display: block; width: 100%; height: auto; min-height: 130px; overflow: visible; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.crosshair { stroke: var(--line-bright); stroke-width: 1; stroke-dasharray: 3 3; }
+.axis-label {
+  fill: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+.chart-tip {
+  position: absolute;
+  top: -4px;
+  transform: translateX(-50%);
+  background: var(--bg-3);
+  border: 1px solid var(--line-bright);
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  z-index: 5;
+}
+.chart-tip b { color: var(--text-0); }
+.chart-tip span { display: block; color: var(--text-2); font-family: var(--font-mono); font-size: 10px; }
+
+/* ---------------------------------------------------------------- bars */
+
+.bar-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.bar-list li {
+  display: grid;
+  grid-template-columns: minmax(72px, 34%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.bar-label {
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-track { height: 9px; background: var(--bg-3); border-radius: 5px; overflow: hidden; }
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 0 4px 4px 0;   /* rounded data-end, anchored to baseline */
+  transition: width 0.3s ease;
+}
+.bar-value { color: var(--text-0); font-size: 12px; min-width: 34px; text-align: right; }
+
+/* ---------------------------------------------------------------- donut */
+
+.donut-wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.donut { width: 128px; height: 128px; flex-shrink: 0; }
+.donut circle { cursor: pointer; }
+.donut-total {
+  fill: var(--text-0);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+}
+.donut-sub {
+  fill: var(--text-2);
+  font-size: 8.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 110px; }
+.legend.wrap { flex-direction: row; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; }
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-1);
+}
+.legend li.on { color: var(--text-0); }
+.legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.legend b { margin-left: auto; color: var(--text-0); font-size: 12px; }
+.legend.wrap b { margin-left: 0; }
+
+/* ---------------------------------------------------------------- bands */
+
+.band-bar {
+  display: flex;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  gap: 2px;                      /* surface gap between adjacent segments */
+  background: var(--bg-3);
+}
+.band-bar span { transition: flex-grow 0.3s ease; }
+
+/* ---------------------------------------------------------------- tiles */
+
+.stat-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+}
+.stat-tile {
+  position: relative;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--series-1);
+  border-radius: 9px;
+  padding: 13px 15px 11px;
+  overflow: hidden;
+  color: var(--series-1);
+}
+.stat-tile.good { border-left-color: var(--status-good); color: var(--status-good); }
+.stat-tile.warn { border-left-color: var(--status-warning); color: var(--status-warning); }
+.stat-tile.critical { border-left-color: var(--status-critical); color: var(--status-critical); }
+.stat-tile.amber { border-left-color: var(--amber); color: var(--amber); }
+
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 31px;
+  line-height: 1.15;
+  color: var(--text-0);
+  margin-top: 1px;
+}
+.stat-hint { font-size: 10.5px; color: var(--text-2); }
+.sparkline {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 58%;
+  height: 22px;
+  opacity: 0.5;
+}
+
+/* ---------------------------------------------------- grouped detections */
+
+.sighting-row:hover td { background: rgba(240, 164, 40, 0.04); }
+.reads-pill {
+  display: inline-block;
+  min-width: 26px;
+  text-align: center;
+  padding: 1px 7px;
+  border-radius: 9px;
+  background: var(--bg-3);
+  border: 1px solid var(--line-bright);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-1);
+}
+.window-cell { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; }
+.window-cell .dur { color: var(--text-2); font-size: 10.5px; }
+
+.conf-meter { display: flex; align-items: center; gap: 7px; }
+.conf-meter .track { width: 46px; height: 5px; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+.conf-meter .fill { display: block; height: 100%; border-radius: 0 3px 3px 0; }
+
+/* ---------------------------------------------------- explainer callout */
+
+.explainer {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  background: linear-gradient(90deg, rgba(57, 135, 229, 0.07), transparent 70%);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--series-1);
+  border-radius: 8px;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: var(--text-1);
+  line-height: 1.55;
+}
+.explainer .ico { font-size: 15px; line-height: 1.2; color: var(--series-1); }
+.explainer b { color: var(--text-0); font-weight: 600; }
+
+.state-key { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: var(--text-1); }
+.state-key span { display: flex; align-items: center; gap: 6px; }
+
+.seg-toggle { display: inline-flex; border: 1px solid var(--line-bright); border-radius: 6px; overflow: hidden; }
+.seg-toggle button {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  background: var(--bg-2);
+  color: var(--text-1);
+  border: none;
+  cursor: pointer;
+}
+.seg-toggle button.on { background: var(--amber); color: #14100a; }
+
+/* ---------------------------------------------------------- responsive */
+
+@media (max-width: 1100px) {
+  .dash { grid-template-columns: 1fr; }
+  .trace-layout { grid-template-columns: 1fr; }
+  .trace-layout .map-wrap { min-height: 320px; }
+}
+
+@media (max-width: 780px) {
+  .rail { width: 60px; }
+  .rail-brand .sub,
+  .rail-foot { display: none; }
+  .rail a { justify-content: center; gap: 0; }
+  .rail a .label { display: none; }
+  .rail-brand .logo { font-size: 15px; letter-spacing: 2px; }
+  .content { padding: 12px; }
+  .topbar { padding: 0 12px; gap: 9px; }
+  .topbar .clock, .topbar .page-title { font-size: 14px; }
+  .stat-value { font-size: 26px; }
+  .toasts { width: auto; left: 12px; right: 12px; }
+}
+
+/* ------------------------------------------------------- evidence thumbs */
+
+/* Plate crops vary wildly in aspect (a far-away plate is a thin sliver).
+   A fixed box with cover-fit makes them scannable in a dense table. */
+.evidence-thumb {
+  width: 82px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line-bright);
+  background: var(--bg-0);
+  cursor: zoom-in;
+  display: block;
+  transition: transform .12s, border-color .12s;
+}
+.evidence-thumb:hover { transform: scale(1.06); border-color: var(--amber); }
+.evidence-none {
+  width: 82px; height: 36px;
+  border-radius: 4px;
+  border: 1px dashed var(--line);
+  display: grid; place-items: center;
+  font-size: 9px; letter-spacing: 1px;
+  color: var(--text-2);
+}
