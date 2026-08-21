@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Boolean, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, LargeBinary, String, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -99,6 +99,26 @@ class Alert(Base):
 
     detection: Mapped[Detection] = relationship()
     watchlist: Mapped[WatchlistVehicle] = relationship()
+
+
+class Evidence(Base):
+    """Detection/alert imagery stored in the database rather than on disk.
+
+    The central tier runs on infrastructure with an ephemeral filesystem, so
+    anything written to local disk disappears on restart. Evidence is the one
+    artefact that must outlive a redeploy — an alert without its picture is
+    not evidence — so it lives in the database, keyed by the same relative
+    path the rest of the system already uses.
+    """
+
+    __tablename__ = "evidence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    path: Mapped[str] = mapped_column(String, unique=True, index=True)
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    content_type: Mapped[str] = mapped_column(String, default="image/jpeg")
+    size_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
 class User(Base):
