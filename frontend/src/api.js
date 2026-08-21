@@ -49,6 +49,10 @@ export const api = {
   insightStats: () => fetch("/api/insight/stats").then(json),
   detections: (params = {}) =>
     fetch(`/api/insight/detections?${new URLSearchParams(params)}`).then(json),
+  sightings: (params = {}) =>
+    fetch(`/api/insight/sightings?${new URLSearchParams(params)}`).then(json),
+  analytics: (hours = 24) => fetch(`/api/insight/analytics?hours=${hours}`).then(json),
+  systemStatus: () => fetch("/api/system").then(json),
   route: (plate) => fetch(`/api/insight/route/${encodeURIComponent(plate)}`).then(json),
 
   watchlist: () => fetch("/api/watch/vehicles").then(json),
