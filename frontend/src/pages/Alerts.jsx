@@ -65,10 +65,10 @@ export function Alerts() {
               <tr key={a.id}>
                 <td>
                   {d?.snapshot_path && (
-                    <img
+                    <img className="evidence-thumb"
                       src={`/data/${d.snapshot_path}`}
-                      alt=""
-                      style={{ height: 30, borderRadius: 3, cursor: "zoom-in", border: "1px solid var(--line-bright)" }}
+                      alt={`Evidence for ${d.plate_text ?? "alert"}`}
+                      loading="lazy"
                       onClick={() => setZoom(`/data/${d.snapshot_path}`)}
                     />
                   )}
