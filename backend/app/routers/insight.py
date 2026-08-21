@@ -39,7 +39,7 @@ def list_sightings(
     """
     from datetime import datetime, timedelta, timezone
 
-    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=hours)
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
     q = db.query(Detection).filter(Detection.plate_text.isnot(None), Detection.ts >= since)
     if plate:
         q = q.filter(Detection.plate_text == anpr.normalise_plate(plate)[0])
@@ -54,14 +54,15 @@ def list_sightings(
     for d in rows:
         key = (d.plate_text, d.camera_id)
         g = groups.get(key)
-        if g and (g["first_seen"] - d.ts) <= GAP:
-            g["first_seen"] = min(g["first_seen"], d.ts)
+        ts = d.ts if d.ts.tzinfo else d.ts.replace(tzinfo=timezone.utc)
+        if g and (g["first_seen"] - ts) <= GAP:
+            g["first_seen"] = min(g["first_seen"], ts)
             g["reads"] += 1
             g["best_conf"] = max(g["best_conf"], d.plate_conf or 0)
             continue
         if g:
             # emit the older window under a distinct key so both survive
-            groups[(d.plate_text, d.camera_id, d.ts.isoformat())] = g
+            groups[(d.plate_text, d.camera_id, ts.isoformat())] = g
         cam = cams.get(d.camera_id)
         groups[key] = {
             "plate": d.plate_text,
@@ -69,8 +70,8 @@ def list_sightings(
             "camera_name": cam.name if cam else str(d.camera_id),
             "location": cam.location if cam else "",
             "department": cam.department if cam else "",
-            "first_seen": d.ts,
-            "last_seen": d.ts,
+            "first_seen": ts,
+            "last_seen": ts,
             "reads": 1,
             "best_conf": d.plate_conf or 0,
             "snapshot": d.snapshot_path,
@@ -91,7 +92,13 @@ def analytics(hours: int = 24, db: Session = Depends(get_db), user: User = Depen
 
     from ..models import Alert, WatchlistVehicle
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    # Postgres returns timezone-aware datetimes, SQLite naive ones. Normalise
+    # everything to aware UTC before doing arithmetic, or the same code that
+    # works on an edge node raises TypeError in the central tier.
+    def aware(dt):
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    now = datetime.now(timezone.utc)
     since = now - timedelta(hours=hours)
 
     dets = db.query(Detection).filter(Detection.ts >= since).all()
@@ -100,7 +107,7 @@ def analytics(hours: int = 24, db: Session = Depends(get_db), user: User = Depen
     # hourly activity histogram, oldest bucket first
     buckets = {i: 0 for i in range(hours)}
     for d in dets:
-        idx = int((now - d.ts).total_seconds() // 3600)
+        idx = int((now - aware(d.ts)).total_seconds() // 3600)
         if 0 <= idx < hours:
             buckets[hours - 1 - idx] += 1
     hour_labels = [(now - timedelta(hours=hours - 1 - i)).strftime("%H:00") for i in range(hours)]
