@@ -40,18 +40,28 @@ def test_media_requires_cookie_or_bearer(client):
 
 
 def test_media_path_traversal_blocked(client, admin):
-    # authenticated, but escaping the data dir or non-image types must 404 —
-    # including URL-encoded traversal that bypasses browser normalisation
-    for path in (
-        "/data/../backend/app/config.py",
+    """Authenticated evidence access must never escape the data directory.
+
+    Requests that still resolve through /data must 404 (including URL-encoded
+    traversal, which survives client-side path normalisation). Whatever the
+    status, no server file content may ever appear in the body — a normalised
+    path lands on the SPA shell, which is fine, but must not be a file read.
+    """
+    escaping = (
         "/data/%2e%2e/backend/app/config.py",
         "/data/..%2f..%2fbackend/app/config.py",
         "/data/detections%2f..%2f..%2fbackend/app/config.py",
         "/data/.jwt_secret",
-    ):
+        "/data/sutra.db",
+    )
+    for path in escaping:
         r = client.get(path, headers=admin)
-        assert r.status_code == 404, path
-        assert "jwt_secret" not in r.text
+        assert r.status_code == 404, f"{path} -> {r.status_code}"
+
+    # no request, however mangled, may return real file contents
+    for path in escaping + ("/data/../backend/app/config.py",):
+        body = client.get(path, headers=admin).text
+        assert "jwt_secret" not in body and "SUTRA_SEED" not in body, path
 
 
 def test_source_url_scheme_allowlist(client, admin):
@@ -100,3 +110,10 @@ def test_security_headers_present(client):
     r = client.get("/api/health")
     assert r.headers.get("x-content-type-options") == "nosniff"
     assert r.headers.get("x-frame-options") == "DENY"
+
+
+def test_sync_endpoint_absent_in_full_mode(client, admin):
+    """The edge->central channel is only exposed by a node running as central,
+    so a normal deployment has no metadata-injection surface at all."""
+    r = client.post("/api/sync/push", headers={"X-Sync-Key": "anything"}, json={})
+    assert r.status_code in (404, 405)

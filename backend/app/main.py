@@ -4,7 +4,8 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from .config import settings
 from .db import Base, engine
@@ -23,14 +24,23 @@ async def lifespan(app: FastAPI):
     from .db import migrate_sqlite
 
     migrate_sqlite()
-    if settings.insight_enabled:
-        insight_engine.start()
-        sampler.frame_subscribers.append(insight_engine.on_frame)
-    if settings.scene_enabled and (settings.data_dir / "models" / "yolox_nano.onnx").exists():
-        from .services.objects import scene
+    logging.getLogger("sutra").info("starting in role=%s", settings.role)
 
-        scene.start()
-        sampler.frame_subscribers.append(scene.on_frame)
+    # The central tier serves the command centre only: no decoders, no models,
+    # no scheduler — that is what keeps it inside a small cloud instance.
+    if settings.runs_ingest:
+        if settings.insight_enabled:
+            insight_engine.start()
+            sampler.frame_subscribers.append(insight_engine.on_frame)
+        if settings.scene_enabled and (settings.data_dir / "models" / "yolox_nano.onnx").exists():
+            from .services.objects import scene
+
+            scene.start()
+            sampler.frame_subscribers.append(scene.on_frame)
+        if settings.central_url and settings.sync_api_key:
+            from .services.syncer import syncer
+
+            syncer.start()
     from .db import SessionLocal
 
     db = SessionLocal()
@@ -40,7 +50,8 @@ async def lifespan(app: FastAPI):
         db.close()
     # the scheduler reconciles the monitoring pool against the concurrency
     # budget — this also resumes ingestion after a restart
-    ingest_scheduler.start()
+    if settings.runs_ingest:
+        ingest_scheduler.start()
     yield
     ingest_scheduler.stop_flag.set()
     insight_engine.stop()
@@ -74,6 +85,10 @@ async def security_headers(request: Request, call_next):
 
 app.include_router(auth.router)
 app.include_router(atlas.router)
+if settings.is_central:
+    from .routers import sync
+
+    app.include_router(sync.router)
 app.include_router(bridge.router)
 app.include_router(insight.router)
 app.include_router(watch.router)
@@ -99,4 +114,24 @@ def evidence_file(rel_path: str, request: Request):
 
 @app.get("/api/health")
 def health():
-    return {"service": "sutra", "status": "ok", "ingest_workers": len(sampler.worker_status())}
+    return {
+        "service": "sutra",
+        "status": "ok",
+        "role": settings.role,
+        "ingest_workers": len(sampler.worker_status()),
+    }
+
+
+# In a single-service deployment (e.g. the central tier on a small cloud
+# instance) the API also serves the built Command UI. Mounted last so it never
+# shadows /api or /data.
+_FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+if _FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=_FRONTEND_DIST, html=True), name="ui")
+
+    @app.exception_handler(404)
+    async def spa_fallback(request: Request, exc):
+        """Client-side routes (/trace, /alerts…) must return the SPA shell."""
+        if request.url.path.startswith(("/api", "/data")):
+            return JSONResponse({"detail": "not found"}, status_code=404)
+        return FileResponse(_FRONTEND_DIST / "index.html")
