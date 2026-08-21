@@ -14,7 +14,11 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    # skips cleanly until a deploy target is configured, so an unconfigured
+    # pipeline reports 'skipped' rather than a misleading failure
+    if: |
+      (github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch')
+      && vars.DEPLOY_CONFIGURED == 'true'
     runs-on: ubuntu-latest
     environment:
       name: staging
