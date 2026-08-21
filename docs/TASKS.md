@@ -82,3 +82,22 @@ Full write-up: docs/SECURITY.md · 19 automated tests in backend/tests/
 3. Add GitHub secrets DEPLOY_HOST / DEPLOY_USER / DEPLOY_SSH_KEY
 4. Create staging + production Environments; set required reviewer on production
 5. Write .env.production on the host with non-default passwords
+
+## Live deployment verified (21 Aug)
+
+**Judge URL: https://sutra-central.onrender.com** — Render free tier, always on, no card.
+
+| Check | Result |
+|---|---|
+| Health, role=central, 0 ingest workers | PASS (232 ms) |
+| SPA served incl. client routes | PASS |
+| All API endpoints require auth | PASS (401) |
+| Weak credentials (admin@123, admin, password, sandbox default) | PASS (all 401) |
+| Login rate limiting | PASS (429 after 5 failures) |
+| Evidence store requires auth | PASS (401) |
+| Path traversal on live host | PASS (no leak) |
+| Sync channel key enforcement | PASS (401 without/with wrong key) |
+| Security headers (nosniff / DENY / no-referrer) | PASS |
+| HTTPS | PASS (Cloudflare edge in front of uvicorn) |
+
+Keep-warm pinger: cron-job.org every 10 min -> /api/health (60s timeout).
