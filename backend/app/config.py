@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     scene_enabled: bool = True
     scene_interval_s: float = 20.0     # min seconds between scene analyses per camera
 
+    # Retention housekeeping (central tier background task)
+    evidence_budget_mb: int = 400          # keep well inside a 1 GB managed database
+    detection_retention_days: int = 90     # metadata is small; imagery is the expensive part
+    retention_interval_s: float = 3600.0
+
     # Auth
     jwt_secret: str = ""          # empty => auto-generated per install (data/.jwt_secret)
     token_ttl_s: int = 12 * 3600

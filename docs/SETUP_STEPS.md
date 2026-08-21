@@ -115,3 +115,31 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN+jhw948kPgV3DIvFdWMYjAUEDKNRyujAVi/kopeEE7
 - **Repository:** https://github.com/laveshparyani/SUTRA
 - **Note for judges:** the hosted instance is the central tier; live camera
   ingest runs on an edge node, matching the deployment model in the HLD.
+
+---
+
+## Running the edge node in the background (done)
+
+The edge node — ingest, ANPR, scene analytics and the upstream sync — now runs
+without a terminal window.
+
+- `infra/run_edge.ps1` — supervises the backend, restarts it if it exits, and
+  rotates its log at 20 MB (`data/logs/edge.log`).
+- `infra/install_edge_startup.ps1` — installs a hidden Startup-folder entry
+  (**no administrator rights needed**). Already installed on this machine.
+- `infra/install_edge_task.ps1` — the Task Scheduler equivalent, if you would
+  rather run it as a scheduled task. Needs an **elevated** PowerShell:
+  right-click PowerShell -> Run as administrator, then
+  `powershell -ExecutionPolicy Bypass -File infra\install_edge_task.ps1`
+
+Start it now without logging out:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Users\Admin\Desktop\SUTRA\infra\run_edge.ps1"
+```
+
+Check what the background tasks are doing (any node, authenticated):
+
+```
+GET /api/system      # scheduler, analytics, edge sync, retention
+```
