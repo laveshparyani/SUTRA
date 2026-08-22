@@ -177,8 +177,17 @@ class CameraWorker(threading.Thread):
             else:
                 consecutive_failures += 1
             if not self.stop_flag.is_set():
-                backoff = min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0)
-                self.stop_flag.wait(backoff if consecutive_failures else settings.reconnect_backoff_s)
+                if consecutive_failures:
+                    # genuinely failing source: back off so its reopen attempts
+                    # stop hogging OpenCV's global capture lock
+                    self.stop_flag.wait(min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0))
+                else:
+                    # The session ended having delivered frames. The portal
+                    # serves each "live" camera as a finite MP4 chunk, so EOF is
+                    # normal operation, not a fault — reconnect straight away or
+                    # the camera visibly blinks out between chunks.
+                    self.last_error = ""
+                    self.stop_flag.wait(0.2)
 
         self._update_health("unknown", "monitoring stopped")
         log.info("cam %s: ingest stopped", self.camera_id)

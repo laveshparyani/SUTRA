@@ -16,19 +16,25 @@ class Settings(BaseSettings):
     sync_api_key: str = ""       # shared secret for the edge->central channel
     sync_interval_s: float = 30.0
 
-    portal_base: str = "https://live.sentinelgujarat.in"
+    portal_base: str = "https://live.corp8.cloud"   # hackathon feed portal (moved from live.sentinelgujarat.in)
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     db_url: str = ""  # derived from data_dir when empty
 
     # Bridge sampler
-    sample_interval_s: float = 0.5     # seconds between kept frames per camera (denser => better temporal voting)
+    # 1 fps per camera keeps analytics load linear as the budget grows: 20
+    # cameras cost ~0.7 of a core for ANPR, where 0.5 s sampling would cost 1.5.
+    sample_interval_s: float = 1.0
     snapshot_every_s: float = 10.0     # seconds between JPEGs persisted to disk
     max_concurrent_cameras: int = 40   # safety cap on simultaneous ingest threads
     reconnect_backoff_s: float = 5.0
     file_sample_interval_s: float = 0.4  # video-time seconds between kept frames for file sources
 
     # Adaptive ingest scheduler (time-multiplexing under a concurrency budget)
-    ingest_budget: int = 8            # max simultaneous live-stream connections (portal caps ~8-10)
+    # Max simultaneous live-stream connections. The limit is this node's own
+    # decode capacity (~200 MB and a fraction of a core per 1080p camera), not
+    # the source: the current portal served 16/16 concurrent requests cleanly.
+    # Lower it on constrained hardware; the scheduler rotates whatever exceeds it.
+    ingest_budget: int = 20
     rotation_dwell_s: float = 90.0    # seconds a rotating camera keeps its slot (connect cost ~15-40s)
     alert_boost_s: float = 300.0      # alert camera + neighbours stay resident this long
     boost_neighbors: int = 3          # nearest cameras boosted alongside an alert camera
