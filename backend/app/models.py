@@ -32,6 +32,13 @@ class Camera(Base):
     source_url: Mapped[str] = mapped_column(String)
     codec: Mapped[str] = mapped_column(String, default="")
     container: Mapped[str] = mapped_column(String, default="")
+    resolution: Mapped[str] = mapped_column(String, default="")      # e.g. 1920x1080
+    source_fps: Mapped[float | None] = mapped_column(Float, nullable=True)
+    bitrate_kbps: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # alternate delivery endpoints advertised by the source, kept so the
+    # registry documents every protocol a camera can be reached on
+    alt_rtsp_url: Mapped[str] = mapped_column(String, default="")
+    alt_hls_url: Mapped[str] = mapped_column(String, default="")
     storage_type: Mapped[str] = mapped_column(String, default="unknown")
     retention_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
