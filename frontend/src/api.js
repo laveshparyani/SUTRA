@@ -51,6 +51,14 @@ export const api = {
     fetch(`/api/insight/detections?${new URLSearchParams(params)}`).then(json),
   sightings: (params = {}) =>
     fetch(`/api/insight/sightings?${new URLSearchParams(params)}`).then(json),
+  alertEpisodes: (params = {}) =>
+    fetch(`/api/watch/alerts/episodes?${new URLSearchParams(params)}`).then(json),
+  ackEpisode: (alertIds) =>
+    fetch("/api/watch/alerts/episodes/ack", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(alertIds),
+    }).then(json),
   analytics: (hours = 24) => fetch(`/api/insight/analytics?hours=${hours}`).then(json),
   systemStatus: () => fetch("/api/system").then(json),
   route: (plate) => fetch(`/api/insight/route/${encodeURIComponent(plate)}`).then(json),

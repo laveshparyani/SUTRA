@@ -10,21 +10,23 @@ const MAX_STREAMS = 6;
 
 const STATES = {
   live: { cls: "ok", label: "Live", why: "delivering frames right now" },
-  connecting: { cls: "warn", label: "Connecting", why: "socket open, waiting for the first frame" },
-  down: { cls: "down", label: "No signal", why: "source refused or dropped the connection" },
-  queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot" },
-  off: { cls: "idle", label: "Not pooled", why: "monitoring is switched off" },
+  connecting: { cls: "warn", label: "Connecting", why: "holds an ingest slot, waiting for the first frame" },
+  unreachable: { cls: "down", label: "Unreachable", why: "holds a slot but the source refuses the connection" },
+  queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot to free up" },
+  off: { cls: "idle", label: "Not pooled", why: "monitoring is switched off for this camera" },
 };
 
-function stateOf(cam, isLive) {
-  if (isLive) return "live";
+/** Truth comes from the ingest workers, not the cached health column: a camera
+ *  either holds a slot right now (and is connecting or being refused) or it is
+ *  waiting for one. */
+function stateOf(cam, worker) {
+  if (worker?.has_frame) return "live";
   if (!cam.monitoring) return "off";
-  if (cam.health === "down") return "down";
-  if (cam.health === "connecting") return "connecting";
+  if (worker) return worker.last_error ? "unreachable" : "connecting";
   return "queued";
 }
 
-function Feed({ cam, isLive, scene }) {
+function Feed({ cam, worker, scene }) {
   const [err, setErr] = useState(false);
   useEffect(() => {
     if (!err) return;
@@ -32,21 +34,26 @@ function Feed({ cam, isLive, scene }) {
     return () => clearTimeout(t);
   }, [err]);
 
-  const st = STATES[stateOf(cam, isLive)];
-  const showStream = isLive && !err;
+  const state = stateOf(cam, worker);
+  const st = STATES[state];
+  const showStream = state === "live" && !err;
+  const detail = state === "unreachable" && worker?.last_error ? worker.last_error : st.why;
 
   return (
     <div className="feed">
       {showStream ? (
         <>
-          <img src={`/api/bridge/cameras/${cam.id}/mjpeg`} alt={`${cam.name} live view`}
+          {/* preview=1 serves a 480px copy encoded once per frame and shared by
+              all viewers: a wall of full-res MJPEG saturates the browser's
+              decode budget and shows no more detail at tile size. */}
+          <img src={`/api/bridge/cameras/${cam.id}/mjpeg?preview=1`} alt={`${cam.name} live view`}
             onError={() => setErr(true)} />
           <div className="rec"><i /> LIVE</div>
         </>
       ) : (
-        <div className="offline" title={st.why}>
+        <div className="offline" title={detail}>
           <span>{st.label.toUpperCase()}</span>
-          <span className="mono small dim">{st.why}</span>
+          <span className="mono small dim">{detail}</span>
         </div>
       )}
       <div className="feed-bar">
@@ -68,7 +75,7 @@ function Feed({ cam, isLive, scene }) {
 
 export function Wall() {
   const [cams, setCams] = useState([]);
-  const [flowing, setFlowing] = useState({});
+  const [workers, setWorkers] = useState({});
   const [scenes, setScenes] = useState({});
   const [dept, setDept] = useState("");
 
@@ -82,11 +89,10 @@ export function Wall() {
         ]);
         setCams(cameras);
         setScenes(scene.cameras || {});
-        setFlowing(Object.fromEntries(
-          bridge.workers
-            .filter((w) => w.has_frame && w.frame_age_s != null && w.frame_age_s < 30)
-            .map((w) => [w.camera_id, w.frame_age_s])
-        ));
+        setWorkers(Object.fromEntries(bridge.workers.map((w) => [
+          w.camera_id,
+          { ...w, has_frame: w.has_frame && w.frame_age_s != null && w.frame_age_s < 30 },
+        ])));
       } catch { /* transient */ }
     };
     load();
@@ -97,15 +103,18 @@ export function Wall() {
   const depts = [...new Set(cams.map((c) => c.department))].sort();
   const inDept = (c) => !dept || c.department === dept;
 
-  const liveCams = cams.filter((c) => inDept(c) && flowing[c.id] != null).slice(0, MAX_STREAMS);
+  const shown = cams.filter(inDept);
+  const liveCams = shown.filter((c) => workers[c.id]?.has_frame).slice(0, MAX_STREAMS);
   const liveIds = new Set(liveCams.map((c) => c.id));
-  const others = cams.filter((c) => inDept(c) && !liveIds.has(c.id)).slice(0, 11);
+  // non-streaming tiles are plain markup and cost no connections, so show them all
+  const others = shown.filter((c) => !liveIds.has(c.id));
 
-  const counts = cams.filter(inDept).reduce((acc, c) => {
-    const s = stateOf(c, flowing[c.id] != null);
+  const counts = shown.reduce((acc, c) => {
+    const s = stateOf(c, workers[c.id]);
     acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
+  const unreachable = counts.unreachable ?? 0;
 
   return (
     <>
@@ -116,12 +125,13 @@ export function Wall() {
           frames carry a video stream — a browser allows about six simultaneous
           streams per host, so SUTRA streams the live ones and labels the rest
           honestly rather than showing black rectangles that pretend to be live.
-          {counts.down > 0 && (
+          {unreachable > 0 && (
             <>
               {" "}
-              <b>{counts.down} source{counts.down > 1 ? "s are" : " is"} refusing connections</b> —
-              the government feed portal is intermittent; SUTRA retries continuously and
-              recovers automatically.
+              <b>{unreachable} source{unreachable > 1 ? "s are" : " is"} refusing connections.</b>{" "}
+              SUTRA holds their slots and retries with backoff, so they resume the moment the
+              upstream returns — the tile states below are read from the live ingest workers,
+              not a cached status.
             </>
           )}
         </div>
@@ -143,16 +153,16 @@ export function Wall() {
         </div>
         <span style={{ flex: 1 }} />
         <span className="dim small">
-          streaming {liveCams.length} of {MAX_STREAMS} slots · {cams.filter(inDept).length} cameras in view
+          streaming {liveCams.length} of {MAX_STREAMS} slots · showing all {shown.length} cameras
         </span>
       </div>
 
       <div className="wall">
         {liveCams.map((cam) => (
-          <Feed cam={cam} isLive scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
         ))}
         {others.map((cam) => (
-          <Feed cam={cam} isLive={false} scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
         ))}
         {cams.length === 0 && (
           <div className="empty-state" style={{ gridColumn: "1/-1" }}>

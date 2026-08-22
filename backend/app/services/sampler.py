@@ -37,7 +37,12 @@ log = logging.getLogger("sutra.sampler")
 
 # camera_id -> (jpeg bytes, monotonic ts) — latest frame cache for the API layer
 _latest: dict[int, tuple[bytes, float]] = {}
+# a wall tile is ~330px wide, so a downscaled copy is encoded once per sampled
+# frame and shared by every viewer: a full 1080p MJPEG grid saturates both the
+# browser's decode budget and the uplink for no visible gain.
+_latest_small: dict[int, tuple[bytes, float]] = {}
 _latest_lock = threading.Lock()
+PREVIEW_WIDTH = 480
 
 # camera_id -> worker
 _workers: dict[int, "CameraWorker"] = {}
@@ -47,8 +52,11 @@ _workers_lock = threading.Lock()
 frame_subscribers: list[Callable] = []
 
 
-def get_latest_frame(camera_id: int) -> tuple[bytes, float] | None:
+def get_latest_frame(camera_id: int, preview: bool = False) -> tuple[bytes, float] | None:
+    """Latest JPEG for a camera. `preview` returns the downscaled wall copy."""
     with _latest_lock:
+        if preview:
+            return _latest_small.get(camera_id) or _latest.get(camera_id)
         return _latest.get(camera_id)
 
 
@@ -111,9 +119,19 @@ class CameraWorker(threading.Thread):
                         break
                     now = time.monotonic()
                     if is_file:
+                        # advance video time by the sample step...
                         frame_idx += 1
                         if frame_idx % keep_every:
                             continue
+                        # ...but never faster than real time. A file decodes far
+                        # quicker than it plays, and an unpaced recorded camera
+                        # pegs a core and floods the analytics queue, starving
+                        # both the live cameras and the operator's browser.
+                        wait = settings.file_sample_interval_s - (now - last_kept)
+                        if last_kept and wait > 0:
+                            if self.stop_flag.wait(wait):
+                                break
+                            now = time.monotonic()
                     elif now - last_kept < settings.sample_interval_s:
                         continue
                     last_kept = now
@@ -124,8 +142,17 @@ class CameraWorker(threading.Thread):
 
                     ok_jpg, jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     if ok_jpg:
+                        small = None
+                        if frame.shape[1] > PREVIEW_WIDTH:
+                            scale = PREVIEW_WIDTH / frame.shape[1]
+                            thumb = cv2.resize(frame, None, fx=scale, fy=scale,
+                                               interpolation=cv2.INTER_AREA)
+                            ok_s, enc = cv2.imencode(".jpg", thumb, [cv2.IMWRITE_JPEG_QUALITY, 62])
+                            small = enc.tobytes() if ok_s else None
                         with _latest_lock:
                             _latest[self.camera_id] = (jpg.tobytes(), now)
+                            if small:
+                                _latest_small[self.camera_id] = (small, now)
 
                     if now - last_saved >= settings.snapshot_every_s and ok_jpg:
                         last_saved = now
