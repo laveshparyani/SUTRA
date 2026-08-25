@@ -30,12 +30,22 @@ class Settings(BaseSettings):
     file_sample_interval_s: float = 0.4  # video-time seconds between kept frames for file sources
 
     # Adaptive ingest scheduler (time-multiplexing under a concurrency budget)
-    # Max simultaneous live-stream connections. The limit is this node's own
-    # decode capacity (~200 MB and a fraction of a core per 1080p camera), not
-    # the source: the current portal served 16/16 concurrent requests cleanly.
-    # Lower it on constrained hardware; the scheduler rotates whatever exceeds it.
-    ingest_budget: int = 20
-    rotation_dwell_s: float = 90.0    # seconds a rotating camera keeps its slot (connect cost ~15-40s)
+    # Max simultaneous live-stream connections.
+    #
+    # Sized to the *source*, not to this node. The portal answers cheap range
+    # requests happily (16/16) but sustains only a couple of concurrent decode
+    # sessions, and the number varies minute to minute: independent FFmpeg
+    # processes bypassing this code entirely decoded 6/12 on one attempt and
+    # 2/6 on the next. Over-provisioning slots against that just multiplies
+    # failing connections, so the budget stays modest and the scheduler rotates
+    # every camera through it — all 30 get covered over time instead of 30
+    # fighting for a handful of sessions at once.
+    ingest_budget: int = 10
+    # How long a rotating camera keeps its slot. Connecting to this portal costs
+    # ~48 s before the first frame arrives, so a short dwell spends the whole
+    # slot connecting and rotates away just as pictures start: a camera that has
+    # successfully connected should keep streaming for a good while.
+    rotation_dwell_s: float = 600.0
     alert_boost_s: float = 300.0      # alert camera + neighbours stay resident this long
     boost_neighbors: int = 3          # nearest cameras boosted alongside an alert camera
     connect_stagger_s: float = 1.5    # gap between connection attempts in one tick

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Camera, Detection, User
+from ..models import Camera, Detection, User, WatchlistVehicle
 from ..schemas import DetectionOut
 from ..security import current_user
 from ..services import anpr
@@ -18,6 +18,74 @@ router = APIRouter(prefix="/api/insight", tags=["insight"])
 @router.get("/stats")
 def stats(user: User = Depends(current_user)):
     return engine.stats()
+
+
+@router.get("/vehicles")
+def list_vehicles(
+    plate: str | None = None,
+    camera_id: int | None = None,
+    hours: int = 168,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    """One row per vehicle — the answer to "what have we seen?".
+
+    Sightings already collapse consecutive reads, but a vehicle that keeps
+    reappearing at the same camera still produces a sighting per visit, which
+    reads as noise. This level groups by registration number outright: total
+    reads, how many cameras saw it, the full time span and where it was last
+    seen. Drill down to /sightings for per-visit windows and /detections for
+    the frame-level trail.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    q = db.query(Detection).filter(Detection.plate_text.isnot(None), Detection.ts >= since)
+    if plate:
+        q = q.filter(Detection.plate_text == anpr.normalise_plate(plate)[0])
+    if camera_id:
+        q = q.filter(Detection.camera_id == camera_id)
+    rows = q.order_by(Detection.ts.desc()).limit(20000).all()
+
+    cams = {c.id: c for c in db.query(Camera).all()}
+    watchlisted = {w.plate for w in db.query(WatchlistVehicle).filter(WatchlistVehicle.active).all()}
+
+    vehicles: dict[str, dict] = {}
+    for d in rows:
+        ts = d.ts if d.ts.tzinfo else d.ts.replace(tzinfo=timezone.utc)
+        v = vehicles.get(d.plate_text)
+        if v is None:
+            cam = cams.get(d.camera_id)
+            v = vehicles[d.plate_text] = {
+                "plate": d.plate_text,
+                "reads": 0,
+                "cameras": set(),
+                "first_seen": ts,
+                "last_seen": ts,
+                "best_conf": d.plate_conf or 0,
+                "last_camera": cam.name if cam else f"#{d.camera_id}",
+                "last_location": cam.location if cam else "",
+                "last_district": cam.district if cam else "",
+                "snapshot": f"/data/{d.snapshot_path}" if d.snapshot_path else None,
+                "watchlisted": d.plate_text in watchlisted,
+            }
+        v["reads"] += 1
+        v["cameras"].add(d.camera_id)
+        v["first_seen"] = min(v["first_seen"], ts)
+        v["last_seen"] = max(v["last_seen"], ts)
+        v["best_conf"] = max(v["best_conf"], d.plate_conf or 0)
+        if v["snapshot"] is None and d.snapshot_path:
+            v["snapshot"] = f"/data/{d.snapshot_path}"
+
+    out = []
+    for v in vehicles.values():
+        v["camera_count"] = len(v["cameras"])
+        v["cameras"] = sorted(v["cameras"])
+        out.append(v)
+    # most recently seen first — that is what an operator scans for
+    out.sort(key=lambda v: v["last_seen"], reverse=True)
+    return out[: min(limit, 1000)]
 
 
 @router.get("/sightings")

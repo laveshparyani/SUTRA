@@ -104,7 +104,6 @@ def alert_episodes(
     entries = {w.id: w for w in db.query(WatchlistVehicle).all()}
     cams = {c.id: c for c in db.query(Camera).all()}
     SEV_RANK = {"low": 0, "medium": 1, "high": 2}
-    GAP = timedelta(hours=6)
 
     episodes: list[dict] = []
     index: dict[tuple, dict] = {}
@@ -117,7 +116,10 @@ def alert_episodes(
         ts = a.ts if a.ts.tzinfo else a.ts.replace(tzinfo=timezone.utc)
         key = (entry.plate, det.camera_id)
         ep = index.get(key)
-        if ep and (ep["first_seen"] - ts) <= GAP:
+        # one row per vehicle per camera for the whole window: splitting a
+        # recurring vehicle into time slices is the repetition operators
+        # complained about, and the window itself carries the timing
+        if ep:
             ep["first_seen"] = min(ep["first_seen"], ts)
             ep["count"] += 1
             ep["unacknowledged"] += 1 if a.status == "new" else 0
