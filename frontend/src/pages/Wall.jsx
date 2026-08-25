@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
@@ -6,7 +6,13 @@ import { api } from "../api";
 // one open indefinitely. Rendering a tile per camera therefore starves every
 // other API call on the page, so only cameras actually delivering frames get a
 // stream, and the grid is capped.
-const MAX_STREAMS = 6;
+//
+// The cap must stay BELOW that ceiling, not equal to it: at 6 the streams owned
+// the entire pool, so this page's own 8-second refresh — and any navigation
+// afterwards, including the login POST — queued behind them and never
+// completed. The wall then rendered "no cameras onboarded" over a healthy core.
+// Two spare connections keep the page able to talk to the API while watching.
+const MAX_STREAMS = 4;
 
 // A frame older than this is no longer "now". Ingest runs at 1 fps, so several
 // seconds of silence already means the source has stopped feeding us; the
@@ -35,11 +41,21 @@ function stateOf(cam, worker) {
 
 function Feed({ cam, worker, scene }) {
   const [err, setErr] = useState(false);
+  const imgRef = useRef(null);
   useEffect(() => {
     if (!err) return;
     const t = setTimeout(() => setErr(false), 10000);   // a dropped stream must not blank the tile forever
     return () => clearTimeout(t);
   }, [err]);
+
+  // An MJPEG response never ends, so dropping the <img> from the tree does not
+  // reliably free its socket — abandoned streams were observed outliving the
+  // render that created them, pushing the tab past the per-host connection
+  // limit even while the tile count stayed within it. Clearing src on the way
+  // out aborts the request explicitly.
+  useEffect(() => () => {
+    if (imgRef.current) imgRef.current.src = "";
+  }, []);
 
   const state = stateOf(cam, worker);
   const st = STATES[state];
@@ -60,8 +76,8 @@ function Feed({ cam, worker, scene }) {
           {/* preview=1 serves a 480px copy encoded once per frame and shared by
               all viewers: a wall of full-res MJPEG saturates the browser's
               decode budget and shows no more detail at tile size. */}
-          <img src={`/api/bridge/cameras/${cam.id}/mjpeg?preview=1`} alt={`${cam.name} live view`}
-            onError={() => setErr(true)} />
+          <img ref={imgRef} src={`/api/bridge/cameras/${cam.id}/mjpeg?preview=1`}
+            alt={`${cam.name} live view`} onError={() => setErr(true)} />
           <div className="rec"><i /> LIVE</div>
         </>
       ) : (
@@ -92,6 +108,9 @@ export function Wall() {
   const [workers, setWorkers] = useState({});
   const [scenes, setScenes] = useState({});
   const [dept, setDept] = useState("");
+  // null until the first load settles: an empty grid means "nothing onboarded"
+  // only once we have actually heard back from the core
+  const [loadFailed, setLoadFailed] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -114,7 +133,12 @@ export function Wall() {
             stale: w.frame_age_s == null || w.frame_age_s >= STALE_AFTER_S,
           },
         ])));
-      } catch { /* transient */ }
+        setLoadFailed(false);
+      } catch {
+        // keep whatever was last shown; the grid must not claim the registry is
+        // empty just because this request could not be answered
+        setLoadFailed(true);
+      }
     };
     load();
     const t = setInterval(load, 8000);
@@ -125,8 +149,8 @@ export function Wall() {
   const inDept = (c) => !dept || c.department === dept;
 
   const shown = cams.filter(inDept);
-  // only genuinely-live cameras earn one of the six stream slots: a frozen
-  // source would otherwise hold a connection a moving one could use
+  // only genuinely-live cameras earn a stream slot: a frozen source would
+  // otherwise hold a connection a moving one could use
   const liveCams = shown.filter((c) => stateOf(c, workers[c.id]) === "live").slice(0, MAX_STREAMS);
   const liveIds = new Set(liveCams.map((c) => c.id));
   // non-streaming tiles are plain markup and cost no connections, so show them all
@@ -146,8 +170,9 @@ export function Wall() {
         <div>
           <b>Live viewing of federated feeds.</b> Only cameras currently delivering
           frames carry a video stream — a browser allows about six simultaneous
-          streams per host, so SUTRA streams the live ones and labels the rest
-          honestly rather than showing black rectangles that pretend to be live.
+          connections per host, so SUTRA streams at most {MAX_STREAMS} and keeps the rest
+          free for the page's own data. The other tiles are labelled honestly
+          rather than shown as black rectangles pretending to be live.
           {unreachable > 0 && (
             <>
               {" "}
@@ -189,9 +214,21 @@ export function Wall() {
         ))}
         {cams.length === 0 && (
           <div className="empty-state" style={{ gridColumn: "1/-1" }}>
-            <div className="big">No cameras onboarded</div>
-            Use <Link to="/registry" style={{ color: "var(--amber)" }}>Registry</Link> to discover
-            or import cameras.
+            {loadFailed === false ? (
+              <>
+                <div className="big">No cameras onboarded</div>
+                Use <Link to="/registry" style={{ color: "var(--amber)" }}>Registry</Link> to discover
+                or import cameras.
+              </>
+            ) : loadFailed ? (
+              <>
+                <div className="big">Cannot reach the core</div>
+                The registry could not be read, so this grid is showing nothing rather than
+                guessing. Retrying every 8 seconds.
+              </>
+            ) : (
+              <div className="big">Loading cameras…</div>
+            )}
           </div>
         )}
       </div>
