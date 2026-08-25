@@ -103,3 +103,4 @@ class AlertOut(BaseModel):
     severity: str
     status: str
     acked_by: str | None
+    match_type: str = "exact"

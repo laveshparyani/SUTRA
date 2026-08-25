@@ -103,6 +103,13 @@ class Alert(Base):
     severity: Mapped[str] = mapped_column(String, default="high")
     status: Mapped[str] = mapped_column(String, default="new")  # new|acknowledged|closed
     acked_by: Mapped[str | None] = mapped_column(String, nullable=True)
+    # exact|probable — whether the camera read the watchlist plate character for
+    # character, or matched it only after OCR-confusion folding. Persisted
+    # because an operator acting on a stolen-vehicle hit must be able to see
+    # that the plate is a one-character inference, not a certainty. Severity
+    # alone cannot carry this: a medium-priority entry matched probably is
+    # indistinguishable from one matched exactly.
+    match_type: Mapped[str] = mapped_column(String, default="exact")
 
     detection: Mapped[Detection] = relationship()
     watchlist: Mapped[WatchlistVehicle] = relationship()

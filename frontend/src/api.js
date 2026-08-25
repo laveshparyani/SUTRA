@@ -91,6 +91,21 @@ export async function downloadFile(url, filename) {
   URL.revokeObjectURL(a.href);
 }
 
+/** Day + time without seconds, for spans where the exact second is noise.
+ *  A formatter rather than a substring of fmtTime(): slicing that string cuts
+ *  a two-digit minute in half ("13:5") whenever the locale shifts by a char. */
+export function fmtDayTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts.endsWith("Z") || ts.includes("+") ? ts : ts + "Z");
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 export function fmtTime(ts) {
   if (!ts) return "—";
   const d = new Date(ts.endsWith("Z") || ts.includes("+") ? ts : ts + "Z");
