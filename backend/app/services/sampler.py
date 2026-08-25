@@ -125,6 +125,10 @@ class CameraWorker(threading.Thread):
                     self._publish(frame, time.monotonic())
             finally:
                 err = reader.last_error
+                # the operator gets the translated cause; the log keeps the raw
+                # FFmpeg line, which is what is actually useful when debugging
+                if reader.raw_error and reader.raw_error != err:
+                    log.info("cam %s ffmpeg: %s", self.camera_id, reader.raw_error)
                 reader.stop()
 
             if self.frames_seen > frames_at_open:

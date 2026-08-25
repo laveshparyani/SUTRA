@@ -49,6 +49,47 @@ def ffmpeg_path() -> str | None:
     return _FFMPEG or None
 
 
+# FFmpeg reports failures as a bare errno ("Error number -138 occurred") or as
+# internal filter-graph wording. Neither means anything to a control-room
+# operator deciding whether a camera needs a field visit, so the raw text is
+# translated to a cause. Keys are matched as substrings, longest first.
+#
+# The numeric codes are MSVCRT errno values negated by AVERROR(): on Windows
+# ETIMEDOUT is 138, not the 110 of glibc, which is why -138 shows up here.
+_ERROR_MEANINGS: dict[str, str] = {
+    "Error number -138": "connection timed out — the source accepted the request but sent no data",
+    "Error number -110": "connection timed out — the source accepted the request but sent no data",
+    "Nothing was written into output file": "connected, but the source sent no video packets",
+    "Connection refused": "connection refused — nothing is listening at that address",
+    "Server returned 401": "rejected by the source: credentials required",
+    "Server returned 403": "rejected by the source: access forbidden",
+    "Server returned 404": "the source URL no longer exists on the portal",
+    "Server returned 5": "the source server reported an internal error",
+    "Immediate exit requested": "decoder stopped",
+    "Invalid data found": "the stream is arriving corrupted or in an unreadable format",
+    "No route to host": "no network route to the camera",
+    "Name or service not known": "the camera hostname does not resolve",
+    "Protocol not found": "unsupported stream protocol for this source URL",
+}
+
+
+def explain_error(raw: str) -> str:
+    """Plain-language cause for a raw FFmpeg stderr line.
+
+    Unrecognised text is passed through: an operator seeing an unfamiliar
+    message is better served than one seeing a message we silently swallowed.
+    """
+    if not raw:
+        return ""
+    for needle in sorted(_ERROR_MEANINGS, key=len, reverse=True):
+        if needle in raw:
+            return _ERROR_MEANINGS[needle]
+    # strip FFmpeg's component prefix ("[out#0/rawvideo @ 0x...] ") — an address
+    # in the middle of an operator-facing string is pure noise
+    cleaned = raw.split("] ", 1)[-1] if raw.startswith("[") else raw
+    return cleaned.strip()
+
+
 class FFmpegFrameReader:
     """Pull decoded BGR frames from a source at a fixed rate.
 
@@ -135,6 +176,11 @@ class FFmpegFrameReader:
 
     @property
     def last_error(self) -> str:
+        return explain_error(self._stderr_tail[-1]) if self._stderr_tail else ""
+
+    @property
+    def raw_error(self) -> str:
+        """Untranslated FFmpeg output, for the log rather than the operator."""
         return self._stderr_tail[-1] if self._stderr_tail else ""
 
     def stop(self) -> None:
