@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, fmtTime } from "../api";
+import { api, fmtDayTime, fmtTime } from "../api";
 import { useAuth } from "../auth.jsx";
 import { PlateChip } from "../components/PlateChip.jsx";
 import { useAlerts } from "../ws.jsx";
@@ -13,6 +13,24 @@ function ago(ts) {
   if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
   if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
   return `${Math.floor(secs / 86400)}d ago`;
+}
+
+/** Says so when a hit is an OCR inference rather than a character-exact read.
+ *  A stolen-vehicle alert an operator may act on must never present a
+ *  one-character guess as a confirmed identification. */
+function MatchNote({ plate, readAs, match }) {
+  if (match !== "probable") return null;
+  const others = (readAs ?? []).filter((p) => p && p !== plate);
+  return (
+    <div className="small" style={{ color: "var(--warn, #e0a030)", marginTop: 3 }}>
+      <span title="Matched after folding OCR-confusable characters (O/0, I/1, B/8…)">
+        ⚠ probable match
+      </span>
+      {others.length > 0 && (
+        <> · read as <span className="mono">{others.join(", ")}</span></>
+      )}
+    </div>
+  );
 }
 
 export function Alerts() {
@@ -144,6 +162,7 @@ export function Alerts() {
                   </td>
                   <td>
                     <PlateChip plate={ep.plate} />
+                    <MatchNote plate={ep.plate} readAs={ep.read_as} match={ep.match_type} />
                     <div className="small">
                       <Link to={`/trace?plate=${ep.plate}`} style={{ color: "var(--amber)" }}>trace route →</Link>
                     </div>
@@ -159,7 +178,7 @@ export function Alerts() {
                   <td className="mono small">
                     {ago(ep.last_seen)}
                     {ep.count > 1 && (
-                      <div className="dim">over {fmtTime(ep.first_seen).slice(0, 12)} →</div>
+                      <div className="dim">since {fmtDayTime(ep.first_seen)}</div>
                     )}
                   </td>
                   <td>
@@ -212,7 +231,14 @@ export function Alerts() {
                           onClick={() => setZoom(`/data/${d.snapshot_path}`)} />
                       )}
                     </td>
-                    <td><PlateChip plate={d?.plate_text ?? w?.plate} /></td>
+                    <td>
+                      {/* the watchlisted vehicle is the subject of the alert;
+                          the camera's raw read is shown beneath it when the two
+                          differ, so this view and the episode view can never
+                          appear to disagree about which vehicle was hit */}
+                      <PlateChip plate={w?.plate ?? d?.plate_text} />
+                      <MatchNote plate={w?.plate} readAs={[d?.plate_text]} match={a.match_type} />
+                    </td>
                     <td><span className={`badge ${a.severity}`}>{w?.reason ?? "—"}</span></td>
                     <td>{c ? <>{c.name}<div className="small dim">{c.location}</div></> : "—"}</td>
                     <td className="mono small">{fmtTime(a.ts)}</td>

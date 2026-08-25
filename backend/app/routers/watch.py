@@ -125,10 +125,21 @@ def alert_episodes(
             ep["unacknowledged"] += 1 if a.status == "new" else 0
             if SEV_RANK.get(a.severity, 0) > SEV_RANK.get(ep["severity"], 0):
                 ep["severity"] = a.severity
+            if det.plate_text and det.plate_text not in ep["read_as"]:
+                ep["read_as"].append(det.plate_text)
+            if a.match_type == "exact":
+                ep["match_type"] = "exact"
             ep["alert_ids"].append(a.id)
             continue
         ep = {
             "plate": entry.plate,
+            # what the cameras actually read, which is not always the plate on
+            # the watchlist: an episode built only from the watchlist entry hides
+            # that the match was inferred. Both are reported so the UI can show
+            # the operator the difference instead of quietly presenting a
+            # fuzzy match as a confirmed identification.
+            "read_as": [det.plate_text] if det.plate_text else [],
+            "match_type": a.match_type,
             "reason": entry.reason,
             "fir_ref": entry.fir_ref,
             "priority": entry.priority,
