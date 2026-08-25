@@ -49,6 +49,8 @@ export const api = {
   insightStats: () => fetch("/api/insight/stats").then(json),
   detections: (params = {}) =>
     fetch(`/api/insight/detections?${new URLSearchParams(params)}`).then(json),
+  vehicles: (params = {}) =>
+    fetch(`/api/insight/vehicles?${new URLSearchParams(params)}`).then(json),
   sightings: (params = {}) =>
     fetch(`/api/insight/sightings?${new URLSearchParams(params)}`).then(json),
   alertEpisodes: (params = {}) =>

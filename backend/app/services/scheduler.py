@@ -161,7 +161,7 @@ class IngestScheduler(threading.Thread):
             if cam.id in sampler.running_ids():
                 continue
             try:
-                sampler.start_worker(cam.id, cam.source_url, cam.source_type)
+                sampler.start_worker(cam.id, cam.source_url, cam.source_type, cam.resolution or "")
                 self._slot_started[cam.id] = time.monotonic()
             except RuntimeError as e:
                 log.warning("could not start cam %s: %s", cam.id, e)

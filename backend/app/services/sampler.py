@@ -32,6 +32,7 @@ import cv2  # noqa: E402
 from ..config import settings
 from ..db import SessionLocal
 from ..models import Camera
+from . import ffreader
 
 log = logging.getLogger("sutra.sampler")
 
@@ -61,19 +62,121 @@ def get_latest_frame(camera_id: int, preview: bool = False) -> tuple[bytes, floa
 
 
 class CameraWorker(threading.Thread):
-    def __init__(self, camera_id: int, source_url: str, source_type: str = "http-progressive"):
+    def __init__(self, camera_id: int, source_url: str, source_type: str = "http-progressive",
+                 resolution: str = ""):
         super().__init__(daemon=True, name=f"ingest-cam{camera_id}")
         self.camera_id = camera_id
         self.source_url = source_url
         self.source_type = source_type
+        self.resolution = resolution
         self.stop_flag = threading.Event()
         self.frames_seen = 0
         self.started_at = time.monotonic()
         self.last_frame_at: datetime | None = None
         self.last_error = ""
+        self._last_saved = 0.0
+        self._last_db = 0.0
 
     def run(self) -> None:
         log.info("cam %s: ingest starting (%s)", self.camera_id, self.source_url)
+        # a restarted worker must not inherit the previous generation's cached
+        # frame: until this one decodes something the camera has no picture
+        with _latest_lock:
+            _latest.pop(self.camera_id, None)
+            _latest_small.pop(self.camera_id, None)
+        if self.source_type != "file" and ffreader.ffmpeg_path():
+            self._run_subprocess()
+            return
+        self._run_opencv()
+
+    def _run_subprocess(self) -> None:
+        """Network sources: one FFmpeg process each, so a slow open cannot block
+        any other camera (OpenCV would serialise them behind one global lock)."""
+        w, h = 1920, 1080
+        if "x" in self.resolution:
+            try:
+                pw, ph = (int(v) for v in self.resolution.lower().split("x", 1))
+                if pw > 0 and ph > 0:
+                    w, h = pw, ph
+            except ValueError:
+                pass
+        failures = 0
+        while not self.stop_flag.is_set():
+            reader = ffreader.FFmpegFrameReader(
+                self.source_url, width=w, height=h,
+                fps=max(0.2, 1.0 / max(settings.sample_interval_s, 0.1)),
+                is_rtsp=self.source_url.lower().startswith("rtsp://"),
+            )
+            if not reader.start():
+                self.last_error = "could not start decoder"
+                self._update_health("down", self.last_error)
+                if self.stop_flag.wait(min(settings.reconnect_backoff_s * (2 ** failures), 300.0)):
+                    break
+                failures += 1
+                continue
+
+            frames_at_open = self.frames_seen
+            self._update_health("connecting", "waiting for first frame")
+            try:
+                while not self.stop_flag.is_set():
+                    frame = reader.read()
+                    if frame is None:
+                        break
+                    self._publish(frame, time.monotonic())
+            finally:
+                err = reader.last_error
+                reader.stop()
+
+            if self.frames_seen > frames_at_open:
+                failures = 0                      # a productive session: the
+                self.last_error = ""              # chunk simply ended
+                if self.stop_flag.wait(0.2):
+                    break
+            else:
+                failures += 1
+                backoff = min(settings.reconnect_backoff_s * (2 ** failures), 300.0)
+                self.last_error = err or f"no frames received (retry in {backoff:.0f}s)"
+                self._update_health("down", self.last_error)
+                if self.stop_flag.wait(backoff):
+                    break
+
+        self._update_health("unknown", "monitoring stopped")
+        log.info("cam %s: ingest stopped", self.camera_id)
+
+    def _publish(self, frame, now: float) -> None:
+        """Cache a sampled frame and hand it to the analytics subscribers."""
+        self.frames_seen += 1
+        self.last_frame_at = datetime.now(timezone.utc)
+        if self.frames_seen == 1:
+            self._update_health("ok", "")
+
+        ok_jpg, jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        if ok_jpg:
+            small = None
+            if frame.shape[1] > PREVIEW_WIDTH:
+                scale = PREVIEW_WIDTH / frame.shape[1]
+                thumb = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+                ok_s, enc = cv2.imencode(".jpg", thumb, [cv2.IMWRITE_JPEG_QUALITY, 62])
+                small = enc.tobytes() if ok_s else None
+            with _latest_lock:
+                _latest[self.camera_id] = (jpg.tobytes(), now)
+                if small:
+                    _latest_small[self.camera_id] = (small, now)
+            if now - self._last_saved >= settings.snapshot_every_s:
+                self._last_saved = now
+                self._save_snapshot(jpg.tobytes())
+
+        for cb in frame_subscribers:
+            try:
+                cb(self.camera_id, frame, now)
+            except Exception:
+                log.exception("frame subscriber failed for cam %s", self.camera_id)
+
+        if now - self._last_db >= 15:
+            self._last_db = now
+            self._update_health("ok", "")
+
+    def _run_opencv(self) -> None:
         # OpenCV serialises VideoCapture opens behind a global FFmpeg lock; a
         # dead network source holding it for its 30s timeout starves every
         # other camera's (re)open. Failing sources must back off exponentially.
@@ -219,13 +322,14 @@ class CameraWorker(threading.Thread):
             db.close()
 
 
-def start_worker(camera_id: int, source_url: str, source_type: str = "http-progressive") -> bool:
+def start_worker(camera_id: int, source_url: str, source_type: str = "http-progressive",
+                 resolution: str = "") -> bool:
     with _workers_lock:
         if camera_id in _workers and _workers[camera_id].is_alive():
             return False
         if len([w for w in _workers.values() if w.is_alive()]) >= settings.max_concurrent_cameras:
             raise RuntimeError(f"max concurrent cameras ({settings.max_concurrent_cameras}) reached")
-        worker = CameraWorker(camera_id, source_url, source_type)
+        worker = CameraWorker(camera_id, source_url, source_type, resolution)
         _workers[camera_id] = worker
         worker.start()
         return True
