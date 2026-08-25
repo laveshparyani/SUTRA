@@ -8,8 +8,15 @@ import { api } from "../api";
 // stream, and the grid is capped.
 const MAX_STREAMS = 6;
 
+// A frame older than this is no longer "now". Ingest runs at 1 fps, so several
+// seconds of silence already means the source has stopped feeding us; the
+// previous 30 s tolerance let a tile hold a LIVE badge over a frozen picture,
+// which is the exact dishonesty this page is supposed to avoid.
+const STALE_AFTER_S = 8;
+
 const STATES = {
   live: { cls: "ok", label: "Live", why: "delivering frames right now" },
+  stalled: { cls: "warn", label: "Stalled", why: "last frame is seconds old — the source stopped feeding" },
   connecting: { cls: "warn", label: "Connecting", why: "holds an ingest slot, waiting for the first frame" },
   unreachable: { cls: "down", label: "Unreachable", why: "holds a slot but the source refuses the connection" },
   queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot to free up" },
@@ -17,10 +24,10 @@ const STATES = {
 };
 
 /** Truth comes from the ingest workers, not the cached health column: a camera
- *  either holds a slot right now (and is connecting or being refused) or it is
- *  waiting for one. */
+ *  either holds a slot right now (and is connecting, stalled or being refused)
+ *  or it is waiting for one. */
 function stateOf(cam, worker) {
-  if (worker?.has_frame) return "live";
+  if (worker?.has_frame) return worker.stale ? "stalled" : "live";
   if (!cam.monitoring) return "off";
   if (worker) return worker.last_error ? "unreachable" : "connecting";
   return "queued";
@@ -37,7 +44,14 @@ function Feed({ cam, worker, scene }) {
   const state = stateOf(cam, worker);
   const st = STATES[state];
   const showStream = state === "live" && !err;
-  const detail = state === "unreachable" && worker?.last_error ? worker.last_error : st.why;
+  // a stalled tile names how long it has been frozen — "17s since last frame"
+  // tells an operator whether to wait or escalate; "Stalled" alone does not
+  const detail =
+    state === "unreachable" && worker?.last_error
+      ? worker.last_error
+      : state === "stalled" && worker?.frame_age_s != null
+        ? `${Math.round(worker.frame_age_s)}s since the last frame`
+        : st.why;
 
   return (
     <div className="feed">
@@ -91,7 +105,14 @@ export function Wall() {
         setScenes(scene.cameras || {});
         setWorkers(Object.fromEntries(bridge.workers.map((w) => [
           w.camera_id,
-          { ...w, has_frame: w.has_frame && w.frame_age_s != null && w.frame_age_s < 30 },
+          {
+            ...w,
+            // a frame we still hold but that has stopped refreshing stays
+            // visible (the last picture is evidence) and is labelled stalled
+            // rather than live
+            has_frame: w.has_frame && w.frame_age_s != null,
+            stale: w.frame_age_s == null || w.frame_age_s >= STALE_AFTER_S,
+          },
         ])));
       } catch { /* transient */ }
     };
@@ -104,7 +125,9 @@ export function Wall() {
   const inDept = (c) => !dept || c.department === dept;
 
   const shown = cams.filter(inDept);
-  const liveCams = shown.filter((c) => workers[c.id]?.has_frame).slice(0, MAX_STREAMS);
+  // only genuinely-live cameras earn one of the six stream slots: a frozen
+  // source would otherwise hold a connection a moving one could use
+  const liveCams = shown.filter((c) => stateOf(c, workers[c.id]) === "live").slice(0, MAX_STREAMS);
   const liveIds = new Set(liveCams.map((c) => c.id));
   // non-streaming tiles are plain markup and cost no connections, so show them all
   const others = shown.filter((c) => !liveIds.has(c.id));
