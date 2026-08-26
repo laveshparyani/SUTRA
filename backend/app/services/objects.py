@@ -11,6 +11,7 @@ import logging
 import queue
 import threading
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -27,16 +28,47 @@ _session = None
 _load_lock = threading.Lock()
 
 
+# Shipped with the code (3.5 MB) rather than left in the gitignored runtime
+# data directory, so a freshly cloned edge node has working scene analytics
+# without fetching anything. An operator-supplied file still wins, which is how
+# a different or newer model gets swapped in.
+_PACKAGED_MODEL = Path(__file__).resolve().parents[1] / "models" / "yolox_nano.onnx"
+
+_load_failed = False
+
+
+def model_path() -> Path:
+    override = settings.data_dir / "models" / "yolox_nano.onnx"
+    return override if override.is_file() else _PACKAGED_MODEL
+
+
 def _load():
-    global _session
-    if _session is None:
-        with _load_lock:
-            if _session is None:
+    """ONNX session, or None when the model cannot be loaded.
+
+    Returning None rather than raising matters: the caller analyses a frame per
+    camera every few seconds inside a broad `except Exception`, so a missing
+    model used to surface as an identical traceback logged forever instead of
+    one line saying scene analytics is off.
+    """
+    global _session, _load_failed
+    if _session is not None or _load_failed:
+        return _session
+    with _load_lock:
+        if _session is None and not _load_failed:
+            path = model_path()
+            if not path.is_file():
+                _load_failed = True
+                log.warning("scene model not found at %s — scene analytics disabled", path)
+                return None
+            try:
                 import onnxruntime as ort
 
-                path = settings.data_dir / "models" / "yolox_nano.onnx"
                 _session = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
                 log.info("scene model loaded: %s", path.name)
+            except Exception:
+                _load_failed = True
+                log.exception("scene model at %s could not be loaded — scene analytics disabled", path)
+                return None
     return _session
 
 
@@ -85,6 +117,8 @@ def _decode(output: np.ndarray, ratio: float) -> list[tuple[str, float, list[int
 
 def analyse_scene(frame: np.ndarray) -> list[tuple[str, float, list[int]]]:
     session = _load()
+    if session is None:
+        return []          # analytics unavailable; callers treat this as "nothing seen"
     img, ratio = _preprocess(frame)
     output = session.run(None, {session.get_inputs()[0].name: img})[0]
     return _decode(output, ratio)
