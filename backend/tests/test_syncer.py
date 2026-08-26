@@ -70,3 +70,22 @@ def test_alert_payload_defaults_are_backward_compatible():
     legacy = AlertIn(plate="GJ01D7553", camera_external_id="sentinel-31", ts="2026-08-20T07:14:36Z")
     assert legacy.match_type == "exact"
     assert legacy.read_as == ""
+
+
+def test_central_updates_an_existing_alert_instead_of_skipping():
+    """Re-syncing must correct rows, not silently leave them stale.
+
+    The intake used to skip an alert it had already stored, so a field added
+    to the payload later could never reach rows that synced before it existed.
+    It also built the Detection before that check, leaving an orphan duplicate
+    behind on every replay.
+    """
+    import inspect as _inspect
+
+    from app.routers import sync
+
+    src = _inspect.getsource(sync.push)
+    # the existence check must precede the Detection construction
+    assert src.index("existing = (") < src.index("det = Detection(")
+    # and an existing row must be updated
+    assert "existing.match_type = a.match_type" in src

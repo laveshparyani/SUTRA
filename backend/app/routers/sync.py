@@ -175,20 +175,42 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
             entry = WatchlistVehicle(plate=a.plate, reason=a.reason, fir_ref=a.fir_ref, added_by="edge-sync")
             db.add(entry)
             db.flush()
+        # Look the alert up BEFORE creating its detection: building the
+        # detection first meant a re-synced alert was skipped as a duplicate
+        # while its detection had already been inserted, leaving an orphan
+        # duplicate behind on every replay.
+        existing = (
+            db.query(Alert)
+            .filter(Alert.watchlist_id == entry.id, Alert.ts == a.ts)
+            .one_or_none()
+        )
+        # the raw read when the edge reports one, so the central tier can show
+        # what the camera saw rather than only what it matched
+        plate_text = a.read_as or a.plate
+
+        if existing is not None:
+            # Update rather than skip. A field added to the payload later (as
+            # match_type was) can then reach rows that synced before it
+            # existed; skipping outright froze them at their column defaults.
+            existing.severity = a.severity
+            existing.status = a.status
+            existing.match_type = a.match_type
+            det = db.get(Detection, existing.detection_id)
+            if det is not None:
+                det.plate_text = plate_text
+            continue
+
         det = Detection(
             camera_id=cid,
             ts=a.ts,
-            # the raw read when the edge reports one, so the central tier can
-            # show what the camera saw rather than only what it matched
-            plate_text=a.read_as or a.plate,
+            plate_text=plate_text,
             snapshot_path=_store_evidence(db, a.snapshot_path, a.snapshot_b64),
         )
         db.add(det)
         db.flush()
-        if not db.query(Alert.id).filter(Alert.watchlist_id == entry.id, Alert.ts == a.ts).first():
-            db.add(Alert(detection_id=det.id, watchlist_id=entry.id, ts=a.ts,
-                         severity=a.severity, status=a.status, match_type=a.match_type))
-            alerts_new += 1
+        db.add(Alert(detection_id=det.id, watchlist_id=entry.id, ts=a.ts,
+                     severity=a.severity, status=a.status, match_type=a.match_type))
+        alerts_new += 1
 
     result = {"cameras_new": cams_new, "detections_new": dets_new, "alerts_new": alerts_new}
     db.add(AuditLog(actor=f"edge:{payload.node}", action="sync.push", detail=str(result)))
