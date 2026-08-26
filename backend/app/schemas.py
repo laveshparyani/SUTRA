@@ -17,6 +17,11 @@ class CameraBase(BaseModel):
     source_url: str
     codec: str = ""
     container: str = ""
+    resolution: str = ""
+    source_fps: float | None = None
+    bitrate_kbps: int | None = None
+    alt_rtsp_url: str = ""
+    alt_hls_url: str = ""
     storage_type: str = "unknown"
     retention_days: int | None = None
 
@@ -98,3 +103,4 @@ class AlertOut(BaseModel):
     severity: str
     status: str
     acked_by: str | None
+    match_type: str = "exact"

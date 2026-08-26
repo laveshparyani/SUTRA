@@ -16,20 +16,36 @@ class Settings(BaseSettings):
     sync_api_key: str = ""       # shared secret for the edge->central channel
     sync_interval_s: float = 30.0
 
-    portal_base: str = "https://live.sentinelgujarat.in"
+    portal_base: str = "https://live.corp8.cloud"   # hackathon feed portal (moved from live.sentinelgujarat.in)
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     db_url: str = ""  # derived from data_dir when empty
 
     # Bridge sampler
-    sample_interval_s: float = 0.5     # seconds between kept frames per camera (denser => better temporal voting)
+    # 1 fps per camera keeps analytics load linear as the budget grows: 20
+    # cameras cost ~0.7 of a core for ANPR, where 0.5 s sampling would cost 1.5.
+    sample_interval_s: float = 1.0
     snapshot_every_s: float = 10.0     # seconds between JPEGs persisted to disk
     max_concurrent_cameras: int = 40   # safety cap on simultaneous ingest threads
     reconnect_backoff_s: float = 5.0
     file_sample_interval_s: float = 0.4  # video-time seconds between kept frames for file sources
 
     # Adaptive ingest scheduler (time-multiplexing under a concurrency budget)
-    ingest_budget: int = 8            # max simultaneous live-stream connections (portal caps ~8-10)
-    rotation_dwell_s: float = 90.0    # seconds a rotating camera keeps its slot (connect cost ~15-40s)
+    # Max simultaneous live-stream connections.
+    #
+    # Sized to the *source*, not to this node. The portal answers cheap range
+    # requests happily (16/16) but sustains only a couple of concurrent decode
+    # sessions, and the number varies minute to minute: independent FFmpeg
+    # processes bypassing this code entirely decoded 6/12 on one attempt and
+    # 2/6 on the next. Over-provisioning slots against that just multiplies
+    # failing connections, so the budget stays modest and the scheduler rotates
+    # every camera through it — all 30 get covered over time instead of 30
+    # fighting for a handful of sessions at once.
+    ingest_budget: int = 10
+    # How long a rotating camera keeps its slot. Connecting to this portal costs
+    # ~48 s before the first frame arrives, so a short dwell spends the whole
+    # slot connecting and rotates away just as pictures start: a camera that has
+    # successfully connected should keep streaming for a good while.
+    rotation_dwell_s: float = 600.0
     alert_boost_s: float = 300.0      # alert camera + neighbours stay resident this long
     boost_neighbors: int = 3          # nearest cameras boosted alongside an alert camera
     connect_stagger_s: float = 1.5    # gap between connection attempts in one tick

@@ -1,14 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, fmtTime } from "../api";
+import { CamMap } from "../components/CamMap.jsx";
 
 export function Atlas() {
   const [gap, setGap] = useState(null);
   const [audit, setAudit] = useState([]);
+  const [cams, setCams] = useState([]);
+  // GIS layer controls — the Model 1 map is layered by department, camera
+  // type, and status, with an optional coverage-radius layer
+  const [dept, setDept] = useState("");
+  const [ctype, setCtype] = useState("");
+  const [status, setStatus] = useState("");
+  const [coverage, setCoverage] = useState(true);
 
   useEffect(() => {
     api.gapAnalysis().then(setGap).catch(() => {});
     api.auditTrail(50).then(setAudit).catch(() => {});
+    api.cameras().then(setCams).catch(() => {});
   }, []);
+
+  const depts = useMemo(() => [...new Set(cams.map((c) => c.department).filter(Boolean))].sort(), [cams]);
+  const types = useMemo(() => [...new Set(cams.map((c) => c.source_type).filter(Boolean))].sort(), [cams]);
+  const filtered = cams.filter(
+    (c) =>
+      (!dept || c.department === dept) &&
+      (!ctype || c.source_type === ctype) &&
+      (!status ||
+        (status === "healthy" ? c.health === "ok" : status === "down" ? c.health === "down" : c.health !== "ok" && c.health !== "down"))
+  );
 
   if (!gap) return <div className="empty-state"><div className="big">Loading…</div></div>;
 
@@ -16,6 +35,35 @@ export function Atlas() {
 
   return (
     <>
+      <div className="panel" style={{ marginBottom: 14 }}>
+        <div className="panel-head">
+          GIS Coverage Map
+          <span className="spacer" />
+          <span className="dim small">{filtered.length} of {cams.length} cameras shown</span>
+        </div>
+        <div className="form-row" style={{ padding: "10px 14px", flexWrap: "wrap", gap: 8 }}>
+          <select value={dept} onChange={(e) => setDept(e.target.value)}>
+            <option value="">All departments</option>
+            {depts.map((d) => <option key={d}>{d}</option>)}
+          </select>
+          <select value={ctype} onChange={(e) => setCtype(e.target.value)}>
+            <option value="">All camera types</option>
+            {types.map((t) => <option key={t}>{t}</option>)}
+          </select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option value="">Any status</option>
+            <option value="healthy">Healthy</option>
+            <option value="down">Down</option>
+            <option value="other">Connecting / unknown</option>
+          </select>
+          <label className="small" style={{ display: "flex", gap: 6, alignItems: "center", color: "var(--text-1)" }}>
+            <input type="checkbox" checked={coverage} onChange={(e) => setCoverage(e.target.checked)} />
+            coverage radius
+          </label>
+        </div>
+        <CamMap cameras={filtered} coverage={coverage} height="380px" />
+      </div>
+
       <div className="kpis" style={{ marginBottom: 14 }}>
         <div className="kpi">
           <div className="label">Registered</div>
