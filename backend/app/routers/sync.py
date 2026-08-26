@@ -79,6 +79,12 @@ class AlertIn(BaseModel):
     status: str = "new"
     snapshot_path: str = ""
     snapshot_b64: str | None = None
+    # Carried across the federation boundary because it cannot be recomputed
+    # here: the edge sends the watchlist plate, so the central tier has no
+    # record of the raw OCR read the match was actually made from. Defaulting
+    # it would present every fuzzy hit as a character-exact identification.
+    match_type: str = "exact"
+    read_as: str = ""      # the plate the camera actually read, when it differs
 
 
 class SyncPayload(BaseModel):
@@ -172,14 +178,16 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
         det = Detection(
             camera_id=cid,
             ts=a.ts,
-            plate_text=a.plate,
+            # the raw read when the edge reports one, so the central tier can
+            # show what the camera saw rather than only what it matched
+            plate_text=a.read_as or a.plate,
             snapshot_path=_store_evidence(db, a.snapshot_path, a.snapshot_b64),
         )
         db.add(det)
         db.flush()
         if not db.query(Alert.id).filter(Alert.watchlist_id == entry.id, Alert.ts == a.ts).first():
             db.add(Alert(detection_id=det.id, watchlist_id=entry.id, ts=a.ts,
-                         severity=a.severity, status=a.status))
+                         severity=a.severity, status=a.status, match_type=a.match_type))
             alerts_new += 1
 
     result = {"cameras_new": cams_new, "detections_new": dets_new, "alerts_new": alerts_new}
