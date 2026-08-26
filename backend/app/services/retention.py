@@ -75,6 +75,9 @@ class RetentionWorker(threading.Thread):
                     db.delete(det)
                     removed_dets += 1
 
+            # 3. collapse detections that are literally the same observation
+            collapsed = self._collapse_duplicates(db)
+
             db.commit()
         finally:
             db.close()
@@ -83,10 +86,71 @@ class RetentionWorker(threading.Thread):
             "evidence_removed": removed_blobs,
             "mb_freed": round(freed_bytes / 1024 / 1024, 2),
             "detections_pruned": removed_dets,
+            "duplicates_collapsed": collapsed,
         }
         if any(result.values()):
             log.info("retention sweep: %s", result)
         return result
+
+    # a single sweep only touches this many duplicate groups, so a large
+    # historical backlog is cleared over several passes rather than in one
+    # long-running transaction on a small managed instance
+    _DEDUP_GROUP_LIMIT = 400
+
+    def _collapse_duplicates(self, db) -> int:
+        """Remove detections that repeat an identical observation.
+
+        The edge->central intake used to insert a detection before checking
+        whether the alert already existed, so every replay of the alert history
+        left an orphan copy behind. Combined with a sync cursor that reset on
+        each restart, the hosted tier accumulated as many as 28 copies of one
+        observation — 59% of stored rows were redundant, inflating vehicle,
+        sighting and detection counts on the judge-facing tier.
+
+        Identity is (camera, timestamp, plate): one camera cannot see the same
+        plate twice at the same instant. The surviving row is the lowest id
+        that has evidence attached, and alerts are repointed to it before the
+        copies go, so no alert is left dangling.
+        """
+        groups = (
+            db.query(
+                Detection.camera_id, Detection.ts, Detection.plate_text,
+                func.count(Detection.id).label("n"),
+            )
+            .filter(Detection.plate_text.isnot(None))
+            .group_by(Detection.camera_id, Detection.ts, Detection.plate_text)
+            .having(func.count(Detection.id) > 1)
+            .limit(self._DEDUP_GROUP_LIMIT)
+            .all()
+        )
+
+        collapsed = 0
+        for camera_id, ts, plate_text, _n in groups:
+            rows = (
+                db.query(Detection)
+                .filter(
+                    Detection.camera_id == camera_id,
+                    Detection.ts == ts,
+                    Detection.plate_text == plate_text,
+                )
+                .order_by(Detection.id.asc())
+                .all()
+            )
+            if len(rows) < 2:
+                continue
+            keeper = next((r for r in rows if r.snapshot_path), rows[0])
+            for dup in rows:
+                if dup.id == keeper.id:
+                    continue
+                db.query(Alert).filter(Alert.detection_id == dup.id).update(
+                    {"detection_id": keeper.id}, synchronize_session=False
+                )
+                db.delete(dup)
+                collapsed += 1
+
+        if collapsed:
+            log.info("collapsed %d duplicate detections across %d groups", collapsed, len(groups))
+        return collapsed
 
     def status(self) -> dict:
         db = SessionLocal()
