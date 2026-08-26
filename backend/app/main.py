@@ -21,9 +21,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
-    from .db import migrate_sqlite
+    from .db import migrate_schema
 
-    migrate_sqlite()
+    migrate_schema()
     logging.getLogger("sutra").info("starting in role=%s", settings.role)
 
     # The central tier serves the command centre only: no decoders, no models,
