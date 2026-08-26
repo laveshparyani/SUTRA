@@ -155,6 +155,10 @@ class Syncer(threading.Thread):
                     "plate": entry.plate, "camera_external_id": cam_ext[det.camera_id],
                     "ts": a.ts.isoformat(), "severity": a.severity, "reason": entry.reason,
                     "fir_ref": entry.fir_ref, "status": a.status,
+                    # without these the centre cannot tell a fuzzy hit from an
+                    # exact one: it never sees the frame, only this payload
+                    "match_type": a.match_type,
+                    "read_as": det.plate_text or "",
                     "snapshot_path": det.snapshot_path,
                     "snapshot_b64": b64,
                 })
