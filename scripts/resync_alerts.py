@@ -15,16 +15,36 @@ in place rather than duplicating them.
     python scripts/resync_alerts.py --rewind   # rewind alerts, keep detections
 """
 
+import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
+REPO = Path(__file__).resolve().parents[1]
 
-from app.config import settings  # noqa: E402
+
+def data_dir() -> Path:
+    """Locate the runtime data directory without importing the application.
+
+    This only rewrites a two-integer text file, so it should not require the
+    backend's dependency stack to be importable — running it with the system
+    interpreter instead of the venv would otherwise fail on pydantic_settings
+    before it read anything. Resolution order mirrors app.config: an explicit
+    environment variable, then backend/.env, then the repo-root default.
+    """
+    env = os.environ.get("SUTRA_DATA_DIR")
+    if env:
+        return Path(env)
+    dotenv = REPO / "backend" / ".env"
+    if dotenv.is_file():
+        for line in dotenv.read_text(encoding="utf-8").splitlines():
+            key, _, value = line.partition("=")
+            if key.strip() == "SUTRA_DATA_DIR" and value.strip():
+                return Path(value.strip())
+    return REPO / "data"
 
 
 def main() -> int:
-    cursor = settings.data_dir / ".sync_cursor"
+    cursor = data_dir() / ".sync_cursor"
     if not cursor.exists():
         print(f"no cursor at {cursor} — the syncer will start from the beginning already")
         return 0
