@@ -259,7 +259,8 @@ class InsightEngine:
         severity = {"high": "high", "medium": "medium"}.get(entry.priority, "low")
         if match_type == "probable" and severity == "high":
             severity = "medium"
-        alert = Alert(detection_id=det.id, watchlist_id=entry.id, severity=severity)
+        alert = Alert(detection_id=det.id, watchlist_id=entry.id, severity=severity,
+                      match_type=match_type or "exact")
         db.add(alert)
         db.commit()
         db.refresh(alert)

@@ -28,10 +28,21 @@ export function AlertProvider({ children }) {
           /* non-JSON keepalive */
         }
       };
-      ws.onclose = () => {
-        if (!closed) setTimeout(connect, 3000);
+      ws.onclose = (ev) => {
+        if (closed) return;
+        // 4401 is the server refusing the media cookie. Reconnecting cannot
+        // change that — only a fresh sign-in can — so a retry loop here just
+        // emits a console error every few seconds and spends a connection from
+        // a pool the video wall already contends for. Protected routes send the
+        // user to /login on their own.
+        if (ev.code === 4401) return;
+        attempt += 1;
+        const delay = Math.min(3000 * 2 ** (attempt - 1), 30000);
+        setTimeout(connect, delay);
       };
+      ws.onopen = () => { attempt = 0; };
     }
+    let attempt = 0;
     connect();
     return () => {
       closed = true;

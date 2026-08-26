@@ -30,8 +30,11 @@ function seqIcon(n) {
   });
 }
 
-/** Leaflet map showing cameras and (optionally) a traced route. */
-export function CamMap({ cameras = [], route = null, height = "100%", onCamClick }) {
+/** Leaflet map showing cameras and (optionally) a traced route.
+ *  `coverage` draws an approximate field-of-view radius around each camera so
+ *  covered corridors and blind zones read directly off the map — the layer the
+ *  gap-analysis table summarises in words. */
+export function CamMap({ cameras = [], route = null, height = "100%", onCamClick, coverage = false }) {
   const holder = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
@@ -59,6 +62,16 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
 
     for (const cam of cameras) {
       if (cam.lat == null || cam.lon == null) continue;
+      if (coverage) {
+        // ~150 m effective ANPR/observation radius for a fixed roadside camera;
+        // colour tracks health so a dead camera's zone reads as a gap, not cover
+        L.circle([cam.lat, cam.lon], {
+          radius: 150,
+          weight: 1,
+          color: cam.health === "ok" ? "#3fae6a" : cam.health === "down" ? "#c94f4f" : "#8a8f98",
+          fillOpacity: cam.health === "ok" ? 0.18 : 0.08,
+        }).addTo(layer);
+      }
       const m = L.marker([cam.lat, cam.lon], { icon: camIcon(cam) }).addTo(layer);
       m.bindPopup(
         `<b>${esc(cam.name)}</b><br/>${esc(cam.location)}<br/>` +
@@ -82,7 +95,7 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
         map.setView(pts[0], 13);
       }
     }
-  }, [cameras, route, onCamClick]);
+  }, [cameras, route, onCamClick, coverage]);
 
   return <div className="map-wrap" style={{ height }} ref={holder} />;
 }

@@ -11,6 +11,13 @@ export function Trace() {
   const [vinfo, setVinfo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(null);
+  const [cams, setCams] = useState([]);
+
+  // the network itself is context: an operator needs to see which cameras
+  // could have seen this vehicle, not just where it was found
+  useEffect(() => {
+    api.cameras().then(setCams).catch(() => {});
+  }, []);
 
   async function search(e) {
     e?.preventDefault();
@@ -72,6 +79,17 @@ export function Trace() {
           </div>
         )}
 
+        {route && route.sightings.length === 1 && (
+          <div className="explainer" style={{ margin: "0 14px 12px" }}>
+            <span className="ico">◎</span>
+            <div>
+              Seen at <b>one location only</b>, so there is no route line to draw yet — a path
+              appears as soon as this vehicle is read by a second camera. The sighting below
+              carries its full time window and evidence.
+            </div>
+          </div>
+        )}
+
         {route && route.sightings.length === 0 && (
           <div className="empty-state">
             <div className="big">Not Sighted</div>
@@ -104,7 +122,7 @@ export function Trace() {
         )}
       </div>
 
-      <CamMap cameras={[]} route={route} height="calc(100vh - 108px)" />
+      <CamMap cameras={cams} route={route} height="calc(100vh - 108px)" />
       {zoom && (
         <div className="lightbox" onClick={() => setZoom(null)}>
           <img src={zoom} alt="" />

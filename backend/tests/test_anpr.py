@@ -41,3 +41,31 @@ def test_vote_plate_majority():
     voted, conf = anpr.vote_plate(reads)
     assert voted == "GJ01D7553"
     assert conf > 0.5
+
+
+def test_probable_match_is_labelled_not_silently_downgraded():
+    """A fuzzy watchlist hit must stay identifiable as fuzzy.
+
+    Severity alone cannot carry this: a medium-priority entry matched only
+    after OCR-confusion folding ends up with the same severity as one matched
+    character for character, so the distinction has to be persisted separately
+    or an operator sees an inferred plate presented as a confirmed one.
+    """
+    from app.models import Alert
+
+    exact = Alert(detection_id=1, watchlist_id=1, severity="medium", match_type="exact")
+    fuzzy = Alert(detection_id=2, watchlist_id=1, severity="medium", match_type="probable")
+    assert exact.severity == fuzzy.severity
+    assert exact.match_type != fuzzy.match_type
+
+    # the label the backfill/matcher assigns comes straight from the comparator
+    assert anpr.plate_similarity("GJ81O1512", "GJ81O7512") == "probable"
+    assert anpr.plate_similarity("GJ81O7512", "GJ81O7512") == "exact"
+
+
+def test_alert_model_defaults_to_exact():
+    """Rows created before the column existed must not claim more than 'exact'
+    by omission — the default is explicit and the backfill corrects history."""
+    from app.models import Alert
+
+    assert Alert.__table__.c.match_type.default.arg == "exact"

@@ -235,10 +235,12 @@ def export_registry(db: Session = Depends(get_db), user: User = Depends(current_
     w = csv.writer(buf)
     w.writerow(["external_id", "name", "location", "department", "district", "lat", "lon",
                 "camera_type", "ownership", "install_date", "source_type", "codec", "container",
+                "resolution", "source_fps", "bitrate_kbps", "alt_rtsp_url",
                 "storage_type", "retention_days", "status", "health", "monitoring", "onboarded_via"])
     for c in q.order_by(Camera.id).all():
         w.writerow([c.external_id, c.name, c.location, c.department, c.district, c.lat, c.lon,
                     c.camera_type, c.ownership, c.install_date, c.source_type, c.codec, c.container,
+                    c.resolution, c.source_fps, c.bitrate_kbps, c.alt_rtsp_url,
                     c.storage_type, c.retention_days, c.status, c.health, c.monitoring, c.onboarded_via])
     db.add(AuditLog(actor=user.username, action="registry.export", detail=f"{q.count()} rows"))
     db.commit()

@@ -87,10 +87,10 @@ def start_all(
 
 
 @router.get("/cameras/{camera_id}/snapshot")
-def snapshot(camera_id: int, request: Request):
+def snapshot(camera_id: int, request: Request, preview: bool = False):
     if not verify_media_access(request):
         raise HTTPException(401, "not authenticated")
-    latest = sampler.get_latest_frame(camera_id)
+    latest = sampler.get_latest_frame(camera_id, preview=preview)
     if latest is None:
         raise HTTPException(404, "no frame available yet — is monitoring started?")
     jpg, _ts = latest
@@ -98,7 +98,7 @@ def snapshot(camera_id: int, request: Request):
 
 
 @router.get("/cameras/{camera_id}/mjpeg")
-async def mjpeg(camera_id: int, request: Request):
+async def mjpeg(camera_id: int, request: Request, preview: bool = False):
     """Lightweight live preview: multipart MJPEG built from the sampler's frame cache.
 
     Serves the video wall without per-viewer transcoding — many viewers share
@@ -110,7 +110,7 @@ async def mjpeg(camera_id: int, request: Request):
     async def gen():
         last_sent = 0.0
         while True:
-            latest = sampler.get_latest_frame(camera_id)
+            latest = sampler.get_latest_frame(camera_id, preview=preview)
             if latest and latest[1] != last_sent:
                 jpg, last_sent = latest
                 yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpg + b"\r\n"

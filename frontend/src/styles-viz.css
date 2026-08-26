@@ -333,3 +333,20 @@
   font-size: 9px; letter-spacing: 1px;
   color: var(--text-2);
 }
+
+/* ------------------------------------------------- alert episode density */
+/* How many times one episode re-fired: the number is the point, so it gets
+   weight without shouting like a severity badge. */
+.hit-count {
+  display: inline-block;
+  min-width: 34px;
+  padding: 2px 7px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-0);
+  background: var(--bg-3);
+  border: 1px solid var(--line-bright);
+  border-radius: 999px;
+}

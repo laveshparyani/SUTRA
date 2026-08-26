@@ -49,8 +49,18 @@ export const api = {
   insightStats: () => fetch("/api/insight/stats").then(json),
   detections: (params = {}) =>
     fetch(`/api/insight/detections?${new URLSearchParams(params)}`).then(json),
+  vehicles: (params = {}) =>
+    fetch(`/api/insight/vehicles?${new URLSearchParams(params)}`).then(json),
   sightings: (params = {}) =>
     fetch(`/api/insight/sightings?${new URLSearchParams(params)}`).then(json),
+  alertEpisodes: (params = {}) =>
+    fetch(`/api/watch/alerts/episodes?${new URLSearchParams(params)}`).then(json),
+  ackEpisode: (alertIds) =>
+    fetch("/api/watch/alerts/episodes/ack", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(alertIds),
+    }).then(json),
   analytics: (hours = 24) => fetch(`/api/insight/analytics?hours=${hours}`).then(json),
   systemStatus: () => fetch("/api/system").then(json),
   route: (plate) => fetch(`/api/insight/route/${encodeURIComponent(plate)}`).then(json),
@@ -79,6 +89,21 @@ export async function downloadFile(url, filename) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(a.href);
+}
+
+/** Day + time without seconds, for spans where the exact second is noise.
+ *  A formatter rather than a substring of fmtTime(): slicing that string cuts
+ *  a two-digit minute in half ("13:5") whenever the locale shifts by a char. */
+export function fmtDayTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts.endsWith("Z") || ts.includes("+") ? ts : ts + "Z");
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 export function fmtTime(ts) {

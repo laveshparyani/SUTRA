@@ -32,12 +32,18 @@ import cv2  # noqa: E402
 from ..config import settings
 from ..db import SessionLocal
 from ..models import Camera
+from . import ffreader
 
 log = logging.getLogger("sutra.sampler")
 
 # camera_id -> (jpeg bytes, monotonic ts) — latest frame cache for the API layer
 _latest: dict[int, tuple[bytes, float]] = {}
+# a wall tile is ~330px wide, so a downscaled copy is encoded once per sampled
+# frame and shared by every viewer: a full 1080p MJPEG grid saturates both the
+# browser's decode budget and the uplink for no visible gain.
+_latest_small: dict[int, tuple[bytes, float]] = {}
 _latest_lock = threading.Lock()
+PREVIEW_WIDTH = 480
 
 # camera_id -> worker
 _workers: dict[int, "CameraWorker"] = {}
@@ -47,25 +53,134 @@ _workers_lock = threading.Lock()
 frame_subscribers: list[Callable] = []
 
 
-def get_latest_frame(camera_id: int) -> tuple[bytes, float] | None:
+def get_latest_frame(camera_id: int, preview: bool = False) -> tuple[bytes, float] | None:
+    """Latest JPEG for a camera. `preview` returns the downscaled wall copy."""
     with _latest_lock:
+        if preview:
+            return _latest_small.get(camera_id) or _latest.get(camera_id)
         return _latest.get(camera_id)
 
 
 class CameraWorker(threading.Thread):
-    def __init__(self, camera_id: int, source_url: str, source_type: str = "http-progressive"):
+    def __init__(self, camera_id: int, source_url: str, source_type: str = "http-progressive",
+                 resolution: str = ""):
         super().__init__(daemon=True, name=f"ingest-cam{camera_id}")
         self.camera_id = camera_id
         self.source_url = source_url
         self.source_type = source_type
+        self.resolution = resolution
         self.stop_flag = threading.Event()
         self.frames_seen = 0
         self.started_at = time.monotonic()
         self.last_frame_at: datetime | None = None
         self.last_error = ""
+        self._last_saved = 0.0
+        self._last_db = 0.0
 
     def run(self) -> None:
         log.info("cam %s: ingest starting (%s)", self.camera_id, self.source_url)
+        # a restarted worker must not inherit the previous generation's cached
+        # frame: until this one decodes something the camera has no picture
+        with _latest_lock:
+            _latest.pop(self.camera_id, None)
+            _latest_small.pop(self.camera_id, None)
+        if self.source_type != "file" and ffreader.ffmpeg_path():
+            self._run_subprocess()
+            return
+        self._run_opencv()
+
+    def _run_subprocess(self) -> None:
+        """Network sources: one FFmpeg process each, so a slow open cannot block
+        any other camera (OpenCV would serialise them behind one global lock)."""
+        w, h = 1920, 1080
+        if "x" in self.resolution:
+            try:
+                pw, ph = (int(v) for v in self.resolution.lower().split("x", 1))
+                if pw > 0 and ph > 0:
+                    w, h = pw, ph
+            except ValueError:
+                pass
+        failures = 0
+        while not self.stop_flag.is_set():
+            reader = ffreader.FFmpegFrameReader(
+                self.source_url, width=w, height=h,
+                fps=max(0.2, 1.0 / max(settings.sample_interval_s, 0.1)),
+                is_rtsp=self.source_url.lower().startswith("rtsp://"),
+            )
+            if not reader.start():
+                self.last_error = "could not start decoder"
+                self._update_health("down", self.last_error)
+                if self.stop_flag.wait(min(settings.reconnect_backoff_s * (2 ** failures), 300.0)):
+                    break
+                failures += 1
+                continue
+
+            frames_at_open = self.frames_seen
+            self._update_health("connecting", "waiting for first frame")
+            try:
+                while not self.stop_flag.is_set():
+                    frame = reader.read()
+                    if frame is None:
+                        break
+                    self._publish(frame, time.monotonic())
+            finally:
+                err = reader.last_error
+                # the operator gets the translated cause; the log keeps the raw
+                # FFmpeg line, which is what is actually useful when debugging
+                if reader.raw_error and reader.raw_error != err:
+                    log.info("cam %s ffmpeg: %s", self.camera_id, reader.raw_error)
+                reader.stop()
+
+            if self.frames_seen > frames_at_open:
+                failures = 0                      # a productive session: the
+                self.last_error = ""              # chunk simply ended
+                if self.stop_flag.wait(0.2):
+                    break
+            else:
+                failures += 1
+                backoff = min(settings.reconnect_backoff_s * (2 ** failures), 300.0)
+                self.last_error = err or f"no frames received (retry in {backoff:.0f}s)"
+                self._update_health("down", self.last_error)
+                if self.stop_flag.wait(backoff):
+                    break
+
+        self._update_health("unknown", "monitoring stopped")
+        log.info("cam %s: ingest stopped", self.camera_id)
+
+    def _publish(self, frame, now: float) -> None:
+        """Cache a sampled frame and hand it to the analytics subscribers."""
+        self.frames_seen += 1
+        self.last_frame_at = datetime.now(timezone.utc)
+        if self.frames_seen == 1:
+            self._update_health("ok", "")
+
+        ok_jpg, jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        if ok_jpg:
+            small = None
+            if frame.shape[1] > PREVIEW_WIDTH:
+                scale = PREVIEW_WIDTH / frame.shape[1]
+                thumb = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+                ok_s, enc = cv2.imencode(".jpg", thumb, [cv2.IMWRITE_JPEG_QUALITY, 62])
+                small = enc.tobytes() if ok_s else None
+            with _latest_lock:
+                _latest[self.camera_id] = (jpg.tobytes(), now)
+                if small:
+                    _latest_small[self.camera_id] = (small, now)
+            if now - self._last_saved >= settings.snapshot_every_s:
+                self._last_saved = now
+                self._save_snapshot(jpg.tobytes())
+
+        for cb in frame_subscribers:
+            try:
+                cb(self.camera_id, frame, now)
+            except Exception:
+                log.exception("frame subscriber failed for cam %s", self.camera_id)
+
+        if now - self._last_db >= 15:
+            self._last_db = now
+            self._update_health("ok", "")
+
+    def _run_opencv(self) -> None:
         # OpenCV serialises VideoCapture opens behind a global FFmpeg lock; a
         # dead network source holding it for its 30s timeout starves every
         # other camera's (re)open. Failing sources must back off exponentially.
@@ -111,9 +226,19 @@ class CameraWorker(threading.Thread):
                         break
                     now = time.monotonic()
                     if is_file:
+                        # advance video time by the sample step...
                         frame_idx += 1
                         if frame_idx % keep_every:
                             continue
+                        # ...but never faster than real time. A file decodes far
+                        # quicker than it plays, and an unpaced recorded camera
+                        # pegs a core and floods the analytics queue, starving
+                        # both the live cameras and the operator's browser.
+                        wait = settings.file_sample_interval_s - (now - last_kept)
+                        if last_kept and wait > 0:
+                            if self.stop_flag.wait(wait):
+                                break
+                            now = time.monotonic()
                     elif now - last_kept < settings.sample_interval_s:
                         continue
                     last_kept = now
@@ -124,8 +249,17 @@ class CameraWorker(threading.Thread):
 
                     ok_jpg, jpg = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
                     if ok_jpg:
+                        small = None
+                        if frame.shape[1] > PREVIEW_WIDTH:
+                            scale = PREVIEW_WIDTH / frame.shape[1]
+                            thumb = cv2.resize(frame, None, fx=scale, fy=scale,
+                                               interpolation=cv2.INTER_AREA)
+                            ok_s, enc = cv2.imencode(".jpg", thumb, [cv2.IMWRITE_JPEG_QUALITY, 62])
+                            small = enc.tobytes() if ok_s else None
                         with _latest_lock:
                             _latest[self.camera_id] = (jpg.tobytes(), now)
+                            if small:
+                                _latest_small[self.camera_id] = (small, now)
 
                     if now - last_saved >= settings.snapshot_every_s and ok_jpg:
                         last_saved = now
@@ -150,8 +284,17 @@ class CameraWorker(threading.Thread):
             else:
                 consecutive_failures += 1
             if not self.stop_flag.is_set():
-                backoff = min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0)
-                self.stop_flag.wait(backoff if consecutive_failures else settings.reconnect_backoff_s)
+                if consecutive_failures:
+                    # genuinely failing source: back off so its reopen attempts
+                    # stop hogging OpenCV's global capture lock
+                    self.stop_flag.wait(min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0))
+                else:
+                    # The session ended having delivered frames. The portal
+                    # serves each "live" camera as a finite MP4 chunk, so EOF is
+                    # normal operation, not a fault — reconnect straight away or
+                    # the camera visibly blinks out between chunks.
+                    self.last_error = ""
+                    self.stop_flag.wait(0.2)
 
         self._update_health("unknown", "monitoring stopped")
         log.info("cam %s: ingest stopped", self.camera_id)
@@ -183,13 +326,14 @@ class CameraWorker(threading.Thread):
             db.close()
 
 
-def start_worker(camera_id: int, source_url: str, source_type: str = "http-progressive") -> bool:
+def start_worker(camera_id: int, source_url: str, source_type: str = "http-progressive",
+                 resolution: str = "") -> bool:
     with _workers_lock:
         if camera_id in _workers and _workers[camera_id].is_alive():
             return False
         if len([w for w in _workers.values() if w.is_alive()]) >= settings.max_concurrent_cameras:
             raise RuntimeError(f"max concurrent cameras ({settings.max_concurrent_cameras}) reached")
-        worker = CameraWorker(camera_id, source_url, source_type)
+        worker = CameraWorker(camera_id, source_url, source_type, resolution)
         _workers[camera_id] = worker
         worker.start()
         return True

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 
@@ -6,47 +6,84 @@ import { api } from "../api";
 // one open indefinitely. Rendering a tile per camera therefore starves every
 // other API call on the page, so only cameras actually delivering frames get a
 // stream, and the grid is capped.
-const MAX_STREAMS = 6;
+//
+// The cap must stay BELOW that ceiling, not equal to it: at 6 the streams owned
+// the entire pool, so this page's own 8-second refresh — and any navigation
+// afterwards, including the login POST — queued behind them and never
+// completed. The wall then rendered "no cameras onboarded" over a healthy core.
+// Two spare connections keep the page able to talk to the API while watching.
+const MAX_STREAMS = 4;
+
+// A frame older than this is no longer "now". Ingest runs at 1 fps, so several
+// seconds of silence already means the source has stopped feeding us; the
+// previous 30 s tolerance let a tile hold a LIVE badge over a frozen picture,
+// which is the exact dishonesty this page is supposed to avoid.
+const STALE_AFTER_S = 8;
 
 const STATES = {
   live: { cls: "ok", label: "Live", why: "delivering frames right now" },
-  connecting: { cls: "warn", label: "Connecting", why: "socket open, waiting for the first frame" },
-  down: { cls: "down", label: "No signal", why: "source refused or dropped the connection" },
-  queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot" },
-  off: { cls: "idle", label: "Not pooled", why: "monitoring is switched off" },
+  stalled: { cls: "warn", label: "Stalled", why: "last frame is seconds old — the source stopped feeding" },
+  connecting: { cls: "warn", label: "Connecting", why: "holds an ingest slot, waiting for the first frame" },
+  unreachable: { cls: "down", label: "Unreachable", why: "holds a slot but the source refuses the connection" },
+  queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot to free up" },
+  off: { cls: "idle", label: "Not pooled", why: "monitoring is switched off for this camera" },
 };
 
-function stateOf(cam, isLive) {
-  if (isLive) return "live";
+/** Truth comes from the ingest workers, not the cached health column: a camera
+ *  either holds a slot right now (and is connecting, stalled or being refused)
+ *  or it is waiting for one. */
+function stateOf(cam, worker) {
+  if (worker?.has_frame) return worker.stale ? "stalled" : "live";
   if (!cam.monitoring) return "off";
-  if (cam.health === "down") return "down";
-  if (cam.health === "connecting") return "connecting";
+  if (worker) return worker.last_error ? "unreachable" : "connecting";
   return "queued";
 }
 
-function Feed({ cam, isLive, scene }) {
+function Feed({ cam, worker, scene }) {
   const [err, setErr] = useState(false);
+  const imgRef = useRef(null);
   useEffect(() => {
     if (!err) return;
     const t = setTimeout(() => setErr(false), 10000);   // a dropped stream must not blank the tile forever
     return () => clearTimeout(t);
   }, [err]);
 
-  const st = STATES[stateOf(cam, isLive)];
-  const showStream = isLive && !err;
+  // An MJPEG response never ends, so dropping the <img> from the tree does not
+  // reliably free its socket — abandoned streams were observed outliving the
+  // render that created them, pushing the tab past the per-host connection
+  // limit even while the tile count stayed within it. Clearing src on the way
+  // out aborts the request explicitly.
+  useEffect(() => () => {
+    if (imgRef.current) imgRef.current.src = "";
+  }, []);
+
+  const state = stateOf(cam, worker);
+  const st = STATES[state];
+  const showStream = state === "live" && !err;
+  // a stalled tile names how long it has been frozen — "17s since last frame"
+  // tells an operator whether to wait or escalate; "Stalled" alone does not
+  const detail =
+    state === "unreachable" && worker?.last_error
+      ? worker.last_error
+      : state === "stalled" && worker?.frame_age_s != null
+        ? `${Math.round(worker.frame_age_s)}s since the last frame`
+        : st.why;
 
   return (
     <div className="feed">
       {showStream ? (
         <>
-          <img src={`/api/bridge/cameras/${cam.id}/mjpeg`} alt={`${cam.name} live view`}
-            onError={() => setErr(true)} />
+          {/* preview=1 serves a 480px copy encoded once per frame and shared by
+              all viewers: a wall of full-res MJPEG saturates the browser's
+              decode budget and shows no more detail at tile size. */}
+          <img ref={imgRef} src={`/api/bridge/cameras/${cam.id}/mjpeg?preview=1`}
+            alt={`${cam.name} live view`} onError={() => setErr(true)} />
           <div className="rec"><i /> LIVE</div>
         </>
       ) : (
-        <div className="offline" title={st.why}>
+        <div className="offline" title={detail}>
           <span>{st.label.toUpperCase()}</span>
-          <span className="mono small dim">{st.why}</span>
+          <span className="mono small dim">{detail}</span>
         </div>
       )}
       <div className="feed-bar">
@@ -68,9 +105,12 @@ function Feed({ cam, isLive, scene }) {
 
 export function Wall() {
   const [cams, setCams] = useState([]);
-  const [flowing, setFlowing] = useState({});
+  const [workers, setWorkers] = useState({});
   const [scenes, setScenes] = useState({});
   const [dept, setDept] = useState("");
+  // null until the first load settles: an empty grid means "nothing onboarded"
+  // only once we have actually heard back from the core
+  const [loadFailed, setLoadFailed] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -82,12 +122,23 @@ export function Wall() {
         ]);
         setCams(cameras);
         setScenes(scene.cameras || {});
-        setFlowing(Object.fromEntries(
-          bridge.workers
-            .filter((w) => w.has_frame && w.frame_age_s != null && w.frame_age_s < 30)
-            .map((w) => [w.camera_id, w.frame_age_s])
-        ));
-      } catch { /* transient */ }
+        setWorkers(Object.fromEntries(bridge.workers.map((w) => [
+          w.camera_id,
+          {
+            ...w,
+            // a frame we still hold but that has stopped refreshing stays
+            // visible (the last picture is evidence) and is labelled stalled
+            // rather than live
+            has_frame: w.has_frame && w.frame_age_s != null,
+            stale: w.frame_age_s == null || w.frame_age_s >= STALE_AFTER_S,
+          },
+        ])));
+        setLoadFailed(false);
+      } catch {
+        // keep whatever was last shown; the grid must not claim the registry is
+        // empty just because this request could not be answered
+        setLoadFailed(true);
+      }
     };
     load();
     const t = setInterval(load, 8000);
@@ -97,15 +148,20 @@ export function Wall() {
   const depts = [...new Set(cams.map((c) => c.department))].sort();
   const inDept = (c) => !dept || c.department === dept;
 
-  const liveCams = cams.filter((c) => inDept(c) && flowing[c.id] != null).slice(0, MAX_STREAMS);
+  const shown = cams.filter(inDept);
+  // only genuinely-live cameras earn a stream slot: a frozen source would
+  // otherwise hold a connection a moving one could use
+  const liveCams = shown.filter((c) => stateOf(c, workers[c.id]) === "live").slice(0, MAX_STREAMS);
   const liveIds = new Set(liveCams.map((c) => c.id));
-  const others = cams.filter((c) => inDept(c) && !liveIds.has(c.id)).slice(0, 11);
+  // non-streaming tiles are plain markup and cost no connections, so show them all
+  const others = shown.filter((c) => !liveIds.has(c.id));
 
-  const counts = cams.filter(inDept).reduce((acc, c) => {
-    const s = stateOf(c, flowing[c.id] != null);
+  const counts = shown.reduce((acc, c) => {
+    const s = stateOf(c, workers[c.id]);
     acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
+  const unreachable = counts.unreachable ?? 0;
 
   return (
     <>
@@ -114,14 +170,16 @@ export function Wall() {
         <div>
           <b>Live viewing of federated feeds.</b> Only cameras currently delivering
           frames carry a video stream — a browser allows about six simultaneous
-          streams per host, so SUTRA streams the live ones and labels the rest
-          honestly rather than showing black rectangles that pretend to be live.
-          {counts.down > 0 && (
+          connections per host, so SUTRA streams at most {MAX_STREAMS} and keeps the rest
+          free for the page's own data. The other tiles are labelled honestly
+          rather than shown as black rectangles pretending to be live.
+          {unreachable > 0 && (
             <>
               {" "}
-              <b>{counts.down} source{counts.down > 1 ? "s are" : " is"} refusing connections</b> —
-              the government feed portal is intermittent; SUTRA retries continuously and
-              recovers automatically.
+              <b>{unreachable} source{unreachable > 1 ? "s are" : " is"} refusing connections.</b>{" "}
+              SUTRA holds their slots and retries with backoff, so they resume the moment the
+              upstream returns — the tile states below are read from the live ingest workers,
+              not a cached status.
             </>
           )}
         </div>
@@ -143,22 +201,34 @@ export function Wall() {
         </div>
         <span style={{ flex: 1 }} />
         <span className="dim small">
-          streaming {liveCams.length} of {MAX_STREAMS} slots · {cams.filter(inDept).length} cameras in view
+          streaming {liveCams.length} of {MAX_STREAMS} slots · showing all {shown.length} cameras
         </span>
       </div>
 
       <div className="wall">
         {liveCams.map((cam) => (
-          <Feed cam={cam} isLive scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
         ))}
         {others.map((cam) => (
-          <Feed cam={cam} isLive={false} scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
         ))}
         {cams.length === 0 && (
           <div className="empty-state" style={{ gridColumn: "1/-1" }}>
-            <div className="big">No cameras onboarded</div>
-            Use <Link to="/registry" style={{ color: "var(--amber)" }}>Registry</Link> to discover
-            or import cameras.
+            {loadFailed === false ? (
+              <>
+                <div className="big">No cameras onboarded</div>
+                Use <Link to="/registry" style={{ color: "var(--amber)" }}>Registry</Link> to discover
+                or import cameras.
+              </>
+            ) : loadFailed ? (
+              <>
+                <div className="big">Cannot reach the core</div>
+                The registry could not be read, so this grid is showing nothing rather than
+                guessing. Retrying every 8 seconds.
+              </>
+            ) : (
+              <div className="big">Loading cameras…</div>
+            )}
           </div>
         )}
       </div>

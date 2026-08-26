@@ -27,7 +27,7 @@ Status legend: ⬜ pending · 🔄 in progress · ✅ done · ⚠️ blocked
 | D5 | Record government-feed demo video | ⬜ pending | record around Camera 7 while portal healthy |
 | D6 | Solution Presentation (PPT/PDF) | ⬜ pending | build from HLD §1-2 + demo assets |
 | D7 | Scalability plan doc | ✅ folded into HLD §8 | expand to standalone if guidelines require |
-| D8 | Hosting + judge credentials (Cloudflare Tunnel) | ⬜ pending | free tier; admin/operator/viewer creds ready |
+| D8 | Hosting + judge credentials | ✅ done | Render central (sutra-central.onrender.com) + edge sync; judge creds ready |
 | D9 | Final submission package (links, YouTube unlisted, repo public) | ⬜ pending | checklist in official Step 5 |
 
 ## Security hardening sprint (pre-submission audit, 20 Aug)
@@ -101,3 +101,19 @@ Full write-up: docs/SECURITY.md · 19 automated tests in backend/tests/
 | HTTPS | PASS (Cloudflare edge in front of uvicorn) |
 
 Keep-warm pinger: cron-job.org every 10 min -> /api/health (60s timeout).
+
+
+## Recheck audit (25 Aug) — pre-submission sweep
+
+| Finding | Severity | Fix | Verified |
+|---|---|---|---|
+| Judge URL 15 commits behind (Render deploys main; everything since portal move was dev-only) | HIGH | dev pushed, PR #7 open dev→main; merge redeploys | CI running |
+| Edge→central sync 500 crash-loop after restarts (in-memory cursor resent full history; multi-MB batches) | HIGH | cursor persisted to data/.sync_cursor; ≤600 KB evidence per batch | ✅ sync green post-restart |
+| Atlas page had no GIS map (Model 1 mandatory: layered map) | HIGH | coverage map on Atlas: dept/type/status layers + coverage-radius | build ✅; visual check pending |
+| Video wall starved connection pool (MJPEG cap = browser limit; login hung, "no cameras onboarded" over healthy core) | HIGH | cap 4, streams aborted on unmount, load-failure state distinct from empty | ✅ network log |
+| Fuzzy watchlist hits displayed as exact reads | HIGH | Alert.match_type persisted + labelled in both alert views; 2 rows backfilled | ✅ API+UI |
+| Frozen tiles labelled LIVE up to 30 s | MED | Stalled state at 8 s with age shown; stalled tiles release stream slots | ✅ API rule |
+| Raw FFmpeg errors shown to operators ("Error number -138") | MED | translated to causes; raw kept in log | ✅ live (cam 6) |
+| Portal capacity characterised: ~5 Mbps/IP ration → 3-4 live streams per IP | INFO | measured (10 vs 20 conns); email to organizers sent; rotation covers all 30 | ✅ measured |
+
+All 21 API endpoints verified 200 with real data · 34 tests passing · frontend builds clean.
