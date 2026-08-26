@@ -1,0 +1,26 @@
+{
+  "GJ01D7553": {
+    "maker": "ASHOK LEYLAND", "model": "ECOMET 1214 REFUSE COMPACTOR",
+    "vehicle_class": "Goods Carrier (HGV)", "fuel": "DIESEL", "colour": "WHITE/GREEN",
+    "registration_date": "2019-03-14", "rto": "GJ01 - AHMEDABAD RTO",
+    "owner_name": "AH*** M*** CORPORATION", "fitness_upto": "2027-03-13", "insurance_valid": true
+  },
+  "GJ81O7512": {
+    "maker": "TATA MOTORS", "model": "LPT 1613", "vehicle_class": "Goods Carrier (HGV)",
+    "fuel": "DIESEL", "colour": "WHITE", "registration_date": "2017-08-02",
+    "rto": "GJ81 - AHMEDABAD (EAST)", "owner_name": "R*** LOGISTICS", "fitness_upto": "2025-08-01",
+    "insurance_valid": false
+  },
+  "GJ01AB1234": {
+    "maker": "MARUTI SUZUKI", "model": "SWIFT VDI", "vehicle_class": "Motor Car (LMV)",
+    "fuel": "DIESEL", "colour": "RED", "registration_date": "2021-11-20",
+    "rto": "GJ01 - AHMEDABAD RTO", "owner_name": "P*** S***", "fitness_upto": "2036-11-19",
+    "insurance_valid": true
+  },
+  "GJ05CD5678": {
+    "maker": "HYUNDAI", "model": "CRETA SX", "vehicle_class": "Motor Car (LMV)",
+    "fuel": "PETROL", "colour": "BLACK", "registration_date": "2023-04-05",
+    "rto": "GJ05 - SURAT RTO", "owner_name": "K*** D***", "fitness_upto": "2038-04-04",
+    "insurance_valid": true
+  }
+}

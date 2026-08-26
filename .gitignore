@@ -4,7 +4,10 @@ CCTV Control Room/
 *.mkv
 *.avi
 
-data/
+# runtime data dir at the repo root only (db, frames, evidence, secrets).
+# NOT a bare `data/`, which also matched backend/app/connectors/data and kept
+# the packaged representative datasets out of the deployed image.
+/data/
 *.jpg
 *.png
 
