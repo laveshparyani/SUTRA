@@ -31,3 +31,6 @@ data/.jwt_secret
 
 # tunnel client binary and logs (downloaded locally, not source)
 infra/tunnel/
+
+# root node_modules from the presentation build tool (pptxgenjs, --no-save)
+/node_modules/
