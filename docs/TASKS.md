@@ -22,10 +22,10 @@ Status legend: ⬜ pending · 🔄 in progress · ✅ done · ⚠️ blocked
 |---|------|--------|-------|
 | D1 | Government-feed evidence capture | ✅ done | submission/: full report (101 rows), cam-7 gov report (15 rows), registry CSV, 19 evidence JPEGs |
 | D2 | Demo video shot scripts | ✅ done | docs/DEMO_SCRIPT.md — both videos, shot-by-shot with narration |
-| D3 | HLD document | ✅ drafted | docs/HLD.md — all required sections incl. measured numbers, 80k sizing, costs; convert to PDF at submission |
+| D3 | HLD document | ✅ done | docs/HLD.md + submission/SUTRA_HLD.pdf (4 pages, A4); regenerate with `python scripts/build_hld_pdf.py docs/HLD.md out.html` then print-to-PDF |
 | D4 | Record own-feed demo video (2-3 min) | ⬜ pending | Lavesh records per script; system stays demo-ready |
 | D5 | Record government-feed demo video | ⬜ pending | record around Camera 7 while portal healthy |
-| D6 | Solution Presentation (PPT/PDF) | ⬜ pending | build from HLD §1-2 + demo assets |
+| D6 | Solution Presentation (PPT/PDF) | ✅ done | submission/SUTRA_Solution_Presentation.pptx — 12 slides; regenerate with `node scripts/build_presentation.js` |
 | D7 | Scalability plan doc | ✅ folded into HLD §8 | expand to standalone if guidelines require |
 | D8 | Hosting + judge credentials | ✅ done | Render central (sutra-central.onrender.com) + edge sync; judge creds ready |
 | D9 | Final submission package (links, YouTube unlisted, repo public) | ⬜ pending | checklist in official Step 5 |
