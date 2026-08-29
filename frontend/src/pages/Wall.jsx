@@ -27,19 +27,27 @@ const STATES = {
   unreachable: { cls: "down", label: "Unreachable", why: "holds a slot but the source refuses the connection" },
   queued: { cls: "idle", label: "Queued", why: "in the pool, waiting for an ingest slot to free up" },
   off: { cls: "idle", label: "Not pooled", why: "monitoring is switched off for this camera" },
+  central: {
+    cls: "idle",
+    label: "Edge-hosted",
+    why: "video decodes on the edge node it belongs to; this command tier receives its detections, alerts and evidence",
+  },
 };
 
 /** Truth comes from the ingest workers, not the cached health column: a camera
  *  either holds a slot right now (and is connecting, stalled or being refused)
- *  or it is waiting for one. */
-function stateOf(cam, worker) {
+ *  or it is waiting for one. On the central tier there are no ingest workers at
+ *  all — video never leaves the edge — so "queued" would be a lie: no slot is
+ *  ever going to free up here. Those tiles say what is actually happening. */
+function stateOf(cam, worker, central) {
   if (worker?.has_frame) return worker.stale ? "stalled" : "live";
+  if (central) return "central";
   if (!cam.monitoring) return "off";
   if (worker) return worker.last_error ? "unreachable" : "connecting";
   return "queued";
 }
 
-function Feed({ cam, worker, scene }) {
+function Feed({ cam, worker, scene, central }) {
   const [err, setErr] = useState(false);
   const imgRef = useRef(null);
   useEffect(() => {
@@ -57,7 +65,7 @@ function Feed({ cam, worker, scene }) {
     if (imgRef.current) imgRef.current.src = "";
   }, []);
 
-  const state = stateOf(cam, worker);
+  const state = stateOf(cam, worker, central);
   const st = STATES[state];
   const showStream = state === "live" && !err;
   // a stalled tile names how long it has been frozen — "17s since last frame"
@@ -108,6 +116,7 @@ export function Wall() {
   const [workers, setWorkers] = useState({});
   const [scenes, setScenes] = useState({});
   const [dept, setDept] = useState("");
+  const [central, setCentral] = useState(false);
   // null until the first load settles: an empty grid means "nothing onboarded"
   // only once we have actually heard back from the core
   const [loadFailed, setLoadFailed] = useState(null);
@@ -115,11 +124,13 @@ export function Wall() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [cameras, bridge, scene] = await Promise.all([
+        const [cameras, bridge, scene, health] = await Promise.all([
           api.cameras(),
           api.bridgeStatus(),
           fetch("/api/insight/scene").then((r) => (r.ok ? r.json() : { cameras: {} })),
+          fetch("/api/health").then((r) => (r.ok ? r.json() : {})),
         ]);
+        setCentral(health.role === "central");
         setCams(cameras);
         setScenes(scene.cameras || {});
         setWorkers(Object.fromEntries(bridge.workers.map((w) => [
@@ -151,13 +162,13 @@ export function Wall() {
   const shown = cams.filter(inDept);
   // only genuinely-live cameras earn a stream slot: a frozen source would
   // otherwise hold a connection a moving one could use
-  const liveCams = shown.filter((c) => stateOf(c, workers[c.id]) === "live").slice(0, MAX_STREAMS);
+  const liveCams = shown.filter((c) => stateOf(c, workers[c.id], central) === "live").slice(0, MAX_STREAMS);
   const liveIds = new Set(liveCams.map((c) => c.id));
   // non-streaming tiles are plain markup and cost no connections, so show them all
   const others = shown.filter((c) => !liveIds.has(c.id));
 
   const counts = shown.reduce((acc, c) => {
-    const s = stateOf(c, workers[c.id]);
+    const s = stateOf(c, workers[c.id], central);
     acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
@@ -168,11 +179,26 @@ export function Wall() {
       <div className="explainer">
         <span className="ico">▦</span>
         <div>
+          {central ? (
+            <>
+              <b>This is the command tier — video stays at the edge.</b> SUTRA
+              deliberately never streams video to the centre: 80,000 cameras of
+              footage would saturate any statewide link, so edge nodes decode
+              locally and push up only what commands need — detections, alerts
+              and evidence, within seconds. Every camera below is doing exactly
+              that; see <Link to="/detections">Detections</Link> and{" "}
+              <Link to="/alerts">Alerts</Link> for what they are producing right
+              now. Live tiles appear on the edge node's own wall.
+            </>
+          ) : (
+            <>
           <b>Live viewing of federated feeds.</b> Only cameras currently delivering
           frames carry a video stream — a browser allows about six simultaneous
           connections per host, so SUTRA streams at most {MAX_STREAMS} and keeps the rest
           free for the page's own data. The other tiles are labelled honestly
           rather than shown as black rectangles pretending to be live.
+            </>
+          )}
           {unreachable > 0 && (
             <>
               {" "}
@@ -201,16 +227,18 @@ export function Wall() {
         </div>
         <span style={{ flex: 1 }} />
         <span className="dim small">
-          streaming {liveCams.length} of {MAX_STREAMS} slots · showing all {shown.length} cameras
+          {central
+            ? `command tier — metadata view · showing all ${shown.length} cameras`
+            : `streaming ${liveCams.length} of ${MAX_STREAMS} slots · showing all ${shown.length} cameras`}
         </span>
       </div>
 
       <div className="wall">
         {liveCams.map((cam) => (
-          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} central={central} key={cam.id} />
         ))}
         {others.map((cam) => (
-          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} key={cam.id} />
+          <Feed cam={cam} worker={workers[cam.id]} scene={scenes[cam.id]} central={central} key={cam.id} />
         ))}
         {cams.length === 0 && (
           <div className="empty-state" style={{ gridColumn: "1/-1" }}>

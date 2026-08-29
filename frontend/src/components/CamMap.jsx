@@ -1,8 +1,18 @@
 import L from "leaflet";
 import { useEffect, useRef } from "react";
 
-const TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const ATTR = '&copy; OpenStreetMap &copy; CARTO';
+// CARTO's basemaps started requiring an API key and now stamp "API KEY
+// REQUIRED" across every tile. Esri's Dark Gray Canvas is keyless, natively
+// dark (so no CSS inversion that would mangle label text), and serves the
+// whole state at the zooms the registry map uses.
+const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas";
+const TILES = `${ESRI}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`;
+// Esri ships the basemap without place names; labels are a separate
+// transparent overlay. Without it the registry map has no towns or districts,
+// which is most of what makes a coverage map readable.
+const LABELS = `${ESRI}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`;
+const ATTR = "&copy; OpenStreetMap &copy; Esri";
+const MAX_TILE_ZOOM = 16;   // Dark Gray Canvas has no tiles past 16
 
 const healthClass = (cam) =>
   cam.health === "ok" ? "ok" : cam.health === "degraded" ? "warn" : cam.health === "down" ? "down" : "idle";
@@ -48,7 +58,14 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
     });
     L.control.attribution({ position: "bottomright", prefix: false }).addAttribution(ATTR).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    L.tileLayer(TILES, { maxZoom: 19 }).addTo(map);
+    // maxNativeZoom stops Leaflet requesting tiles that do not exist past 16;
+    // it upscales the zoom-16 tile instead of rendering blank grey squares.
+    // Both in the tile pane: the labels layer is added second so it draws over
+    // the basemap, while markers and coverage circles keep their own higher
+    // panes and stay above both.
+    const tileOpts = { maxZoom: 19, maxNativeZoom: MAX_TILE_ZOOM };
+    L.tileLayer(TILES, tileOpts).addTo(map);
+    L.tileLayer(LABELS, tileOpts).addTo(map);
     mapRef.current = map;
     layerRef.current = L.layerGroup().addTo(map);
     return () => map.remove();
