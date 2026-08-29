@@ -165,6 +165,7 @@ restricted CORS, and a full audit trail. Verified against the live host.
 
 ## Key dates (2026)
 
-- **29 Aug** — last date to apply / submit
-- **30 Aug** — shortlisting
-- **1–2 Sep** — hackathon event @ i-Hub Gujarat, Grand Finale + results
+- **4 Aug** — registration opened
+- **7 Sep** — last date to apply / submit
+- **7 Sep, evening** — shortlisting
+- **10–11 Sep** — hackathon event, Grand Finale + results
