@@ -16,7 +16,7 @@
 
 Status legend: ⬜ pending · 🔄 in progress · ✅ done · ⚠️ blocked
 
-## Phase D — Submission deliverables (deadline 29 Aug)
+## Phase D — Submission deliverables (deadline 7 Sep, extended from 29 Aug)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|

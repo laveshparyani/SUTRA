@@ -1,5 +1,6 @@
 # SUTRA — Requirements Checklist vs. Official Hackathon Statement
-*Audited 19 Aug 2026 against the full problem statement. Deadline: 29 Aug.*
+*Audited 19 Aug 2026 against the full problem statement. Deadline: 7 Sep 2026
+(extended by the organisers from the original 29 Aug).*
 
 Legend: ✅ done & verified · 🟡 partial / untested · ❌ missing
 
