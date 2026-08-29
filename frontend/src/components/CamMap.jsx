@@ -2,17 +2,19 @@ import L from "leaflet";
 import { useEffect, useRef } from "react";
 
 // CARTO's basemaps started requiring an API key and now stamp "API KEY
-// REQUIRED" across every tile. Esri's Dark Gray Canvas is keyless, natively
-// dark (so no CSS inversion that would mangle label text), and serves the
-// whole state at the zooms the registry map uses.
-const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas";
-const TILES = `${ESRI}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`;
-// Esri ships the basemap without place names; labels are a separate
-// transparent overlay. Without it the registry map has no towns or districts,
-// which is most of what makes a coverage map readable.
-const LABELS = `${ESRI}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`;
+// REQUIRED" across every tile. Esri's tile services are keyless: Dark Gray
+// Canvas is natively dark (no CSS inversion that would mangle label text), and
+// World Imagery gives operators the actual rooftop / junction a camera covers.
+// Esri ships basemaps without place names — labels are separate transparent
+// overlays, and without them the coverage map has no towns or districts.
+const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
+const DARK_BASE = `${ESRI}/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`;
+const DARK_LABELS = `${ESRI}/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`;
+const SAT_BASE = `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`;
+const SAT_LABELS = `${ESRI}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}`;
 const ATTR = "&copy; OpenStreetMap &copy; Esri";
-const MAX_TILE_ZOOM = 16;   // Dark Gray Canvas has no tiles past 16
+const DARK_MAX_ZOOM = 16;   // Dark Gray Canvas has no tiles past 16
+const SAT_MAX_ZOOM = 18;    // imagery verified to 18 across Gujarat
 
 const healthClass = (cam) =>
   cam.health === "ok" ? "ok" : cam.health === "degraded" ? "warn" : cam.health === "down" ? "down" : "idle";
@@ -58,14 +60,19 @@ export function CamMap({ cameras = [], route = null, height = "100%", onCamClick
     });
     L.control.attribution({ position: "bottomright", prefix: false }).addAttribution(ATTR).addTo(map);
     L.control.zoom({ position: "bottomright" }).addTo(map);
-    // maxNativeZoom stops Leaflet requesting tiles that do not exist past 16;
-    // it upscales the zoom-16 tile instead of rendering blank grey squares.
-    // Both in the tile pane: the labels layer is added second so it draws over
-    // the basemap, while markers and coverage circles keep their own higher
-    // panes and stay above both.
-    const tileOpts = { maxZoom: 19, maxNativeZoom: MAX_TILE_ZOOM };
-    L.tileLayer(TILES, tileOpts).addTo(map);
-    L.tileLayer(LABELS, tileOpts).addTo(map);
+    // maxNativeZoom stops Leaflet requesting tiles past a set's deepest zoom;
+    // it upscales the deepest tile instead of rendering blank grey squares.
+    // Base + labels travel as one group so switching views swaps both at once.
+    // Everything stays in the tile pane: labels draw over their basemap, while
+    // markers and coverage circles keep their own higher panes above both.
+    const pair = (base, labels, maxNative) => {
+      const o = { maxZoom: 19, maxNativeZoom: maxNative };
+      return L.layerGroup([L.tileLayer(base, o), L.tileLayer(labels, o)]);
+    };
+    const dark = pair(DARK_BASE, DARK_LABELS, DARK_MAX_ZOOM).addTo(map);
+    const satellite = pair(SAT_BASE, SAT_LABELS, SAT_MAX_ZOOM);
+    L.control.layers({ "Dark map": dark, Satellite: satellite }, null,
+      { position: "bottomright", collapsed: false }).addTo(map);
     mapRef.current = map;
     layerRef.current = L.layerGroup().addTo(map);
     return () => map.remove();
