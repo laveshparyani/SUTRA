@@ -1,0 +1,15 @@
+# gitleaks configuration — CI runs a full-history secret scan on every push.
+#
+# Keep this allowlist narrow: real credentials in tests must still be caught.
+# The one entry below is the deliberately fake portal password used by
+# backend/tests/test_portal.py to prove that credentials are injected into
+# RTSP URLs and redacted from logs. It matched the generic-api-key rule.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake credentials used by the test suite"
+regexes = [
+  '''AB12-CD34-EF56''',
+]
