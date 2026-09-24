@@ -167,7 +167,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   const mods = [
     ["COMMAND", "React + Leaflet control room", "Overview map · video wall · vehicle trace · alert centre · registry · coverage analysis · audit", AMBER],
     ["ATLAS", "Registry & GIS foundation (Model 1)", "Bulk/API/manual onboarding · layered GIS map · camera health · gap & ageing analysis · CSV export · audit trail", "5B8FB9"],
-    ["BRIDGE", "Source adapters & federation (Model 3)", "http-progressive · RTSP over TCP · file · HLS/ONVIF-ready · adaptive ingest scheduler · shared MJPEG relay", "5B8FB9"],
+    ["BRIDGE", "Source adapters & federation (Model 3)", "RTSP over TCP (credentialed) · cookie-gated HLS · http-progressive · file · ONVIF-ready · adaptive ingest scheduler · shared MJPEG relay", "5B8FB9"],
     ["INSIGHT", "AI video analytics", "YOLOv9-t plate detection → CCT-S OCR → temporal voting → Indian-plate normalisation · YOLOX-nano scene analytics · route reconstruction", "5B8FB9"],
     ["WATCH", "Watchlist correlation & alerting", "Fuzzy matcher · severity model · WebSocket push · gov-DB connectors (VAHAN / SARTHI / eGujCop / AFIS contract)", "5B8FB9"],
   ];

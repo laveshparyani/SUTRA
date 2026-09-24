@@ -1,58 +1,51 @@
-"""Probe the hackathon live-feed portal: list cameras, optionally grab a frame.
+"""Probe the Sentinel Camera Grid with the edge node's portal credentials.
 
-Usage:
-    python scripts/probe_feeds.py               # list cameras, save cameras.json
-    python scripts/probe_feeds.py --grab 1      # also save a frame from camera 1 (needs opencv-python)
+Reads SUTRA_PORTAL_EMAIL / SUTRA_PORTAL_PASSWORD from backend/.env (via the
+app settings), lists the catalogue and pulls a few frames from one camera
+over RTSP, printing only redacted URLs. Usage:
+
+    python scripts/probe_feeds.py            # catalogue + cam04
+    python scripts/probe_feeds.py cam17 5    # camera id, frames to pull
 """
 
-import argparse
-import json
+import asyncio
 import sys
-import urllib.request
+import time
 from pathlib import Path
 
-BASE = "https://live.sentinelgujarat.in"
-OUT_DIR = Path(__file__).resolve().parent.parent / "data"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
-
-def fetch_cameras() -> list[dict]:
-    with urllib.request.urlopen(f"{BASE}/api/cameras", timeout=15) as r:
-        payload = json.load(r)
-    return payload.get("cameras", payload if isinstance(payload, list) else [])
-
-
-def grab_frame(camera_id: str, out_path: Path) -> bool:
-    try:
-        import cv2
-    except ImportError:
-        print("opencv-python not installed — run: pip install opencv-python", file=sys.stderr)
-        return False
-    cap = cv2.VideoCapture(f"{BASE}/stream/{camera_id}")
-    ok, frame = cap.read()
-    cap.release()
-    if not ok:
-        print(f"could not read a frame from camera {camera_id}", file=sys.stderr)
-        return False
-    cv2.imwrite(str(out_path), frame)
-    return True
+from app.services import discovery, portal  # noqa: E402
+from app.services.ffreader import FFmpegFrameReader  # noqa: E402
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--grab", metavar="CAMERA_ID", help="save one frame from this camera id")
-    args = ap.parse_args()
+    cam = sys.argv[1] if len(sys.argv) > 1 else "cam04"
+    want = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+    if not portal.configured():
+        raise SystemExit("set SUTRA_PORTAL_EMAIL / SUTRA_PORTAL_PASSWORD in backend/.env first")
 
-    OUT_DIR.mkdir(exist_ok=True)
-    cameras = fetch_cameras()
-    (OUT_DIR / "cameras.json").write_text(json.dumps(cameras, indent=2))
-    print(f"{len(cameras)} cameras — saved to {OUT_DIR / 'cameras.json'}\n")
-    for cam in cameras:
-        print(f"  [{cam['id']:>3}] {cam['location']:<55} {cam['codec']}/{cam['container']} {cam['status']}")
+    cams = asyncio.run(discovery.fetch_portal_cameras())
+    print(f"catalogue: {len(cams)} cameras")
+    for c in cams:
+        print(f"  {c['id']:6s} {c.get('name', '')}")
 
-    if args.grab:
-        out = OUT_DIR / f"camera_{args.grab}_frame.jpg"
-        if grab_frame(args.grab, out):
-            print(f"\nframe saved: {out}")
+    meta = discovery._metadata({"id": cam, "name": cam})
+    url = portal.authenticate_url(meta["source_url"])
+    print(f"\npulling {want} frames from {portal.redact_url(url)} ...")
+    reader = FFmpegFrameReader(url, width=640, height=360, fps=1.0, is_rtsp=True, timeout_s=30)
+    t0 = time.time()
+    if not reader.start():
+        raise SystemExit("ffmpeg did not start")
+    got = 0
+    while got < want and time.time() - t0 < 90:
+        frame = reader.read()
+        if frame is None:
+            break
+        got += 1
+        print(f"  frame {got} at {time.time() - t0:.1f}s shape={frame.shape}")
+    reader.stop()
+    print(f"done: {got}/{want} frames; last_error={reader.last_error!r}")
 
 
 if __name__ == "__main__":
