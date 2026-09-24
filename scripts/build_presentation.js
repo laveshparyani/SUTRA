@@ -99,7 +99,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   const facts = [
     ["38", "cameras onboarded"],
     ["11", "districts · 7 departments"],
-    ["68", "automated tests green"],
+    ["174", "automated tests green"],
     ["17/17", "live API endpoints"],
   ];
   facts.forEach(([big, small], i) => {
@@ -501,7 +501,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
     });
   });
   panel(s, 0.6, 6.2, 12.1, 0.72, "1C3A2A");
-  s.addText("17/17 live API endpoints green · 59 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
+  s.addText("17/17 live API endpoints green · 174 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
     x: 0.6, y: 6.2, w: 12.1, h: 0.72, align: "center", valign: "middle", fontSize: 12.5,
     bold: true, color: GREEN, fontFace: B_FONT, isTextBox: true, margin: 0,
   });
