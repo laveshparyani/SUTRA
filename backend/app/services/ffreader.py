@@ -26,6 +26,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ..config import settings
 from . import portal
 
 log = logging.getLogger("sutra.ffreader")
@@ -160,6 +161,10 @@ class FFmpegFrameReader:
             # Analytics timestamps come from the wall clock at receipt anyway.
             cmd += ["-rtsp_transport", "tcp", "-timeout", str(self.timeout_s * 1_000_000),
                     "-use_wallclock_as_timestamps", "1"]
+            if settings.rtsp_keyframes_only:
+                # decode I-frames only: ~4x less CPU per camera, one distinct
+                # frame per GOP instead of per second
+                cmd += ["-skip_frame", "nokey"]
         else:
             # cookie-gated sources (the portal's HLS side) need the session
             # cookie and a browser User-Agent on every playlist/segment fetch
@@ -175,10 +180,18 @@ class FFmpegFrameReader:
             cmd += ["-seekable", "0", "-reconnect", "1", "-reconnect_streamed", "1",
                     "-reconnect_delay_max", "5"]
             cmd += ["-rw_timeout", str(self.timeout_s * 1_000_000)]
+        keyframes_only = self.is_rtsp and settings.rtsp_keyframes_only
         cmd += [
             "-i", self.url,
             "-an", "-sn",
-            "-vf", f"fps={self.fps},{scale}",
+            # with keyframe-only decode the cadence is the GOP itself; an fps
+            # filter would just duplicate each keyframe to fill the gaps and
+            # send the same picture through inference several times
+            "-vf", scale if keyframes_only else f"fps={self.fps},{scale}",
+        ]
+        if keyframes_only:
+            cmd += ["-fps_mode", "passthrough"]
+        cmd += [
             "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1",
         ]
         try:
