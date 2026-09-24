@@ -1,7 +1,7 @@
 # SUTRA Build Plan
 
-**Written 18 Aug 2026. Submission deadline: 7 Sep 2026. Event: 10–11 Sep.**
-*(Organisers extended the deadline from 29 Aug; the day-by-day plan below is
+**Written 18 Aug 2026. Submission deadline: 28 Sep 2026. Event: 12–13 Oct.**
+*(Organisers moved the deadline twice, 29 Aug → 7 Sep → 28 Sep; the day-by-day plan below is
 kept as the original build log.)*
 That is **11 days** to a working platform + docs + two demo videos.
 

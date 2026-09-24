@@ -1,68 +1,79 @@
-"""Auto-discovery adapter: pulls the hackathon portal's camera list into Atlas.
+"""Auto-discovery adapter: pulls the hackathon portal's camera grid into Atlas.
 
-One concrete adapter of the Bridge connector framework. The portal publishes a
-JSON inventory at `/api/cameras` and offers each camera over several
-transports; discovery records them all and picks the one that is actually
-reachable, so onboarding stays fully API-driven (Model 1 'API-based
-onboarding').
+One concrete adapter of the Bridge connector framework. The Sentinel Camera
+Grid publishes a JSON catalogue at `/cameras.json` (id + display name only —
+no coordinates, codec or resolution, so those come from geocoding the name
+and from the decoder once a stream is open). Every camera is then reachable
+over three transports:
 
-Transport notes, measured against the portal rather than assumed:
-  * `/stream/{id}` progressive HTTP over 443 — works, and is what ingest uses.
-  * `rtsp://…:8554/stream/{id}` — advertised, but port 8554 is blocked on many
-    operator networks (ours included), so it is stored for documentation and
-    used only when explicitly preferred.
-  * `/live/stream/{id}/index.m3u8` — HLS behind a browser cookie handshake,
-    which a headless decoder cannot complete; recorded, not used.
+  * RTSP  `rtsp://<ip>:8554/stream/<id>` — mediamtx on a public IP, credentials
+    in the URL. Real live loop with monotonic PTS; what ingest uses.
+  * HLS   `https://cctv.corp8.cloud/<id>/index.m3u8` — cookie-gated, AES-128,
+    served as a finished ~12 h recording. Fallback for networks where 8554 is
+    blocked; the operator's browser wall also plays it.
+  * WHEP  `http://<ip>:8889/stream/<id>/whep` — browser preview only.
+
+Onboarding stays fully API-driven (Model 1 'API-based onboarding'), and the
+registry never stores credentials: URLs are credential-free here and the
+portal module injects them when a stream is opened.
 """
 
+import asyncio
 import logging
+import re
 
-import httpx
 from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..geodata import locate
 from ..models import Camera
+from . import portal
 
 log = logging.getLogger("sutra.discovery")
 
 # external_id prefix is stable across portal moves so a rehost updates the
-# existing registry rows instead of duplicating the whole inventory
+# existing registry rows (and keeps their detection history) instead of
+# duplicating the whole inventory. The grid's "cam07" is the same camera the
+# first portal called id 7, so the numeric part is what the id is built from.
 EXT_PREFIX = "sentinel"
+_CAM_ID = re.compile(r"^cam0*(\d+)$", re.I)
+_LEADING_NUMBER = re.compile(r"^\s*\d+\s+")
 
 
 async def fetch_portal_cameras() -> list[dict]:
-    async with httpx.AsyncClient(timeout=25, follow_redirects=True) as client:
-        r = await client.get(f"{settings.portal_base}/api/cameras")
-        r.raise_for_status()
-        payload = r.json()
-    return payload.get("cameras", payload if isinstance(payload, list) else [])
+    """The grid's catalogue. Raises PortalAuthError when the portal cannot be
+    logged into, and httpx errors when it is unreachable."""
+    r = await asyncio.to_thread(portal.get, "/cameras.json")
+    payload = r.json()
+    return payload.get("cameras", payload) if isinstance(payload, dict) else payload
 
 
-def _absolute(url: str) -> str:
-    """Portal HLS paths are relative; make them addressable."""
-    if not url:
-        return ""
-    return url if url.startswith(("http://", "https://", "rtsp://")) else f"{settings.portal_base}{url}"
+def external_id_for(portal_id: str) -> str:
+    m = _CAM_ID.match(str(portal_id))
+    return f"{EXT_PREFIX}-{int(m.group(1))}" if m else f"{EXT_PREFIX}-{portal_id}"
 
 
 def _metadata(pc: dict) -> dict:
-    """Map a portal record onto registry columns."""
-    w, h = pc.get("width") or 0, pc.get("height") or 0
+    """Map a catalogue record onto registry columns."""
+    cam_id = str(pc["id"])
+    label = (pc.get("name") or cam_id).strip()
+    # "04 Paldi Circle" -> name "Paldi Circle"; the numbered label is kept as
+    # the location string because that is how operators know these feeds
+    name = _LEADING_NUMBER.sub("", label) or label
+    rtsp = f"rtsp://{settings.portal_rtsp_host}:{settings.portal_rtsp_port}/stream/{cam_id}"
     return {
-        "name": pc.get("name") or f"Camera {pc['id']}",
-        "location": pc.get("location", ""),
-        "codec": pc.get("codec") or "",
-        "container": pc.get("container") or "",
-        "resolution": f"{w}x{h}" if w and h else "",
-        "source_fps": pc.get("fps") or None,
-        "bitrate_kbps": pc.get("bitrate_kbps") or None,
-        "alt_rtsp_url": pc.get("rtsp_url", "") or "",
-        "alt_hls_url": _absolute(pc.get("hls_live_url", "") or ""),
-        "status": pc.get("status", "unknown"),
-        # progressive HTTP is the transport that actually reaches us
-        "source_type": "http-progressive",
-        "source_url": f"{settings.portal_base}/stream/{pc['id']}",
+        "name": name,
+        "location": label,
+        "status": pc.get("status", "live"),
+        "source_type": "rtsp",
+        "source_url": rtsp,
+        "alt_rtsp_url": rtsp,
+        "alt_hls_url": f"{settings.portal_base}/{cam_id}/index.m3u8",
+        # the catalogue carries no stream properties; keep whatever an earlier
+        # record or the decoder already established
+        "codec": pc.get("codec") or None,
+        "container": pc.get("container") or None,
+        "resolution": pc.get("resolution") or None,
     }
 
 
@@ -71,9 +82,11 @@ def upsert_cameras(db: Session, portal_cams: list[dict]) -> dict:
     seen: set[str] = set()
 
     for pc in portal_cams:
-        ext_id = f"{EXT_PREFIX}-{pc['id']}"
+        if not pc.get("id"):
+            continue
+        ext_id = external_id_for(pc["id"])
         seen.add(ext_id)
-        meta = _metadata(pc)
+        meta = {k: v for k, v in _metadata(pc).items() if v is not None}
         cam = db.query(Camera).filter(Camera.external_id == ext_id).one_or_none()
         if cam is None:
             lat, lon, district, dept = locate(meta["location"])
@@ -94,6 +107,8 @@ def upsert_cameras(db: Session, portal_cams: list[dict]) -> dict:
             # transport details and leave operator-curated fields alone
             for field, value in meta.items():
                 setattr(cam, field, value)
+            if cam.status == "offline":
+                cam.health_detail = ""
             updated += 1
 
     # cameras the portal no longer lists are marked offline rather than left

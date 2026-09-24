@@ -16,7 +16,17 @@ class Settings(BaseSettings):
     sync_api_key: str = ""       # shared secret for the edge->central channel
     sync_interval_s: float = 30.0
 
-    portal_base: str = "https://live.corp8.cloud"   # hackathon feed portal (moved from live.sentinelgujarat.in)
+    # Hackathon feed portal (Sentinel Camera Grid). Moved twice already:
+    # live.sentinelgujarat.in -> live.corp8.cloud -> cctv.corp8.cloud (Sep 2026).
+    # HLS and the catalogue sit behind Cloudflare on portal_base; RTSP/WebRTC
+    # cannot be proxied, so they are served straight from a public IP.
+    portal_base: str = "https://cctv.corp8.cloud"
+    portal_rtsp_host: str = "103.250.160.189"
+    portal_rtsp_port: int = 8554
+    # registered email + system-issued access password; set in backend/.env,
+    # never in this file or the repo
+    portal_email: str = ""
+    portal_password: str = ""
     data_dir: Path = Path(__file__).resolve().parents[2] / "data"
     db_url: str = ""  # derived from data_dir when empty
 

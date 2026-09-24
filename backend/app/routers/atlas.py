@@ -12,6 +12,7 @@ from ..models import AuditLog, Camera, User
 from ..schemas import CameraCreate, CameraOut, CameraUpdate
 from ..security import current_user, require_roles
 from ..services.discovery import fetch_portal_cameras, upsert_cameras
+from ..services.portal import PortalAuthError
 
 router = APIRouter(prefix="/api/atlas", tags=["atlas"])
 
@@ -127,7 +128,12 @@ async def discover(
     user: User = Depends(require_roles("admin", "operator")),
 ):
     """Pull the hackathon portal's camera list and upsert into the registry."""
-    portal_cams = await fetch_portal_cameras()
+    try:
+        portal_cams = await fetch_portal_cameras()
+    except PortalAuthError as exc:
+        raise HTTPException(502, str(exc))
+    except Exception as exc:  # network / portal-side failure, not ours
+        raise HTTPException(502, f"portal unreachable: {type(exc).__name__}")
     result = upsert_cameras(db, portal_cams)
     db.add(AuditLog(actor=user.username, action="camera.discover", detail=str(result)))
     db.commit()

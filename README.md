@@ -105,7 +105,14 @@ Create `backend/.env` to push metadata to a hosted central tier:
 SUTRA_ROLE=edge
 SUTRA_CENTRAL_URL=https://sutra-central.onrender.com
 SUTRA_SYNC_API_KEY=<key from the central tier's environment>
+# hackathon feed portal (cctv.corp8.cloud) — your registered email and the
+# access password it issued; used for RTSP and the cookie-gated HLS/catalogue
+SUTRA_PORTAL_EMAIL=<registered email>
+SUTRA_PORTAL_PASSWORD=<issued access password>
 ```
+
+The portal credentials never leave the edge node: the registry stores
+credential-free URLs and they are injected only when a stream is opened.
 
 Roles are `full` (all-in-one), `edge` (ingest + inference), `central`
 (command centre, no video decode).
@@ -166,6 +173,9 @@ restricted CORS, and a full audit trail. Verified against the live host.
 ## Key dates (2026)
 
 - **4 Aug** — registration opened
-- **7 Sep** — last date to apply / submit
-- **7 Sep, evening** — shortlisting
-- **10–11 Sep** — hackathon event, Grand Finale + results
+- **28 Sep** — last date to apply and upload the submission
+- **28 Sep** — shortlisting announcement
+- **12–13 Oct** — hackathon event at i-Hub Gujarat, Gandhinagar
+- **13 Oct** — results and prize distribution
+
+*(Organisers moved these twice: 29 Aug → 7 Sep → 28 Sep. Dates above match https://sentinel.gujarat.gov.in/schedule as of 24 Sep 2026.)*

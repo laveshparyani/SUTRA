@@ -55,7 +55,7 @@ Why this hybrid:
                |                             | sampled frames
 +--------------+-----------------------------+-----------------------+
 |                        SUTRA BRIDGE                                |
-| source adapters: http-progressive · RTSP(TCP) · file · HLS/ONVIF   |
+| source adapters: RTSP(TCP, credentialed) · HLS(cookie) · http · file |
 | adaptive ingest scheduler (concurrency budget, dwell rotation,     |
 | pinning, alert-boost) · health probes · MJPEG relay (shared)       |
 +--------------^-----------------------------------------------------+
