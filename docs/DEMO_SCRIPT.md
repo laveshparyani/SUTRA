@@ -5,9 +5,12 @@ Two videos are required. Record with OBS Studio (free) or Windows Game Bar
 explicitly reject mock-ups, so let the running system carry the video. Keep
 own-feed ≤3:00.
 
-**Pre-flight (both videos):** backend + frontend running, portal healthy
-(Registry shows green cameras), mediamtx + truck publisher running, logged in
-as `admin`. Practice the click path once before recording.
+**Pre-flight (both videos):** backend + frontend running (`sutra-api` +
+`sutra-command` in `.claude/launch.json`, API on :8010), portal credentials in
+`backend/.env` (`SUTRA_PORTAL_EMAIL` / `_PASSWORD`), Registry showing green
+`sentinel-*` cameras, mediamtx + truck publisher running, logged in as `admin`.
+Pin cameras 7, 9 and 12 (★ in Registry) ten minutes before recording so the
+plate-rich feeds hold their slots. Practice the click path once before recording.
 
 ---
 
@@ -29,8 +32,8 @@ as `admin`. Practice the click path once before recording.
 
 | # | Time | Screen | Say |
 |---|------|--------|-----|
-| 1 | 0:00 | Registry: filter/scroll to portal cameras (sentinel-*); click ⟳ Discover | "SUTRA onboards the Government-provided cameras automatically from the hackathon portal's API — thirty-plus heterogeneous feeds: MP4, MKV, AVI containers across five departments." |
-| 2 | 0:30 | Video Wall: live government tiles (pick a moment when several flow) | "Live viewing of the Government feeds, multiplexed under the concurrency budget the portal can sustain." |
+| 1 | 0:00 | Registry: filter/scroll to portal cameras (sentinel-*); click ⟳ Discover | "SUTRA onboards the Government-provided cameras automatically from the hackathon portal's catalogue — thirty live RTSP feeds, H.264 and H.265 mixed, across five departments, authenticated per connection. Credentials never enter the registry." |
+| 2 | 0:30 | Video Wall: live government tiles (pick a moment when several flow) | "Live viewing of the Government feeds over RTSP, time-multiplexed under a concurrency budget so all thirty are covered on one machine; pinned cameras hold their slot." |
 | 3 | 1:00 | Detections page filtered to Camera 7 | "AI analytics on the Government feed: automatic number-plate recognition on Camera 7, Gir Somnath — reads up to 98 percent confidence, each with an evidence crop." |
 | 4 | 1:30 | Click a cam-7 evidence thumbnail (lightbox) | "Every read is evidenced." |
 | 5 | 1:45 | ⬇ Output Report with camera 7 filter; open CSV | "The required output report: detected plates with UTC and IST timestamps, straight from the Government feed." |
