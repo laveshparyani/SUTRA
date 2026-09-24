@@ -140,3 +140,29 @@ def test_reader_passes_cookie_and_ua_to_ffmpeg(monkeypatch):
     assert cmd[cmd.index("-user_agent") + 1] == "UA/1"
     assert cmd[cmd.index("-headers") + 1] == "Cookie: sentinel=abc\r\n"
     assert "-rtsp_transport" not in cmd
+
+
+def test_keyframe_only_mode_changes_the_rtsp_command(monkeypatch):
+    captured = {}
+
+    class FakeProc:
+        stdout = None
+        stderr = None
+
+    monkeypatch.setattr("app.services.ffreader.subprocess.Popen", lambda cmd, **kw: captured.setdefault("cmd", cmd) and FakeProc())
+    monkeypatch.setattr("app.services.ffreader.ffmpeg_path", lambda: "ffmpeg")
+
+    monkeypatch.setattr(settings, "rtsp_keyframes_only", False)
+    assert FFmpegFrameReader("rtsp://cam/1", is_rtsp=True, fps=1.0).start()
+    full = captured.pop("cmd")
+    assert "-skip_frame" not in full and any(v.startswith("fps=1") for v in full)
+    assert "-timeout" in full and "-rw_timeout" not in full
+
+    monkeypatch.setattr(settings, "rtsp_keyframes_only", True)
+    assert FFmpegFrameReader("rtsp://cam/1", is_rtsp=True, fps=1.0).start()
+    lite = captured.pop("cmd")
+    assert lite[lite.index("-skip_frame") + 1] == "nokey"
+    assert "-fps_mode" in lite and not any(v.startswith("fps=") for v in lite)
+    # HTTP sources are untouched by the RTSP-only switch
+    assert FFmpegFrameReader("https://x/cam/index.m3u8", is_rtsp=False).start()
+    assert "-skip_frame" not in captured["cmd"]

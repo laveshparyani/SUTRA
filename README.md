@@ -115,7 +115,9 @@ The portal credentials never leave the edge node: the registry stores
 credential-free URLs and they are injected only when a stream is opened.
 
 Roles are `full` (all-in-one), `edge` (ingest + inference), `central`
-(command centre, no video decode).
+(command centre, no video decode). On a small edge node, `SUTRA_RTSP_KEYFRAMES_ONLY=true`
+decodes only keyframes: about a quarter of the CPU per camera, one frame per
+GOP (2–4 s on the portal feeds) instead of one per second.
 
 ---
 

@@ -37,6 +37,11 @@ class Settings(BaseSettings):
     snapshot_every_s: float = 10.0     # seconds between JPEGs persisted to disk
     max_concurrent_cameras: int = 40   # safety cap on simultaneous ingest threads
     reconnect_backoff_s: float = 5.0
+    # Low-CPU mode for RTSP sources: decode only keyframes. Measured on the
+    # portal's 1080p25 feeds: 1.0 s CPU per 20 s of stream instead of 4.2 s,
+    # at the cost of one distinct frame per GOP (2-4 s) rather than one per
+    # second. Off by default; turn on to widen coverage on a small edge node.
+    rtsp_keyframes_only: bool = False
     file_sample_interval_s: float = 0.4  # video-time seconds between kept frames for file sources
 
     # Adaptive ingest scheduler (time-multiplexing under a concurrency budget)
