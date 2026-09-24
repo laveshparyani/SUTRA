@@ -45,7 +45,7 @@ All figures from the running system on a **CPU-only** machine (no GPU):
 - Plate detection + OCR — **30–75 ms/frame**
 - Scene analytics (person/vehicle) — **43 ms/frame**
 - Central tier memory — **102 MB** · Edge node with 9 cameras — **514 MB**
-- **68 automated tests** across 11 files · CI runs tests, frontend build,
+- **174 automated tests** across 17 files · CI runs tests, frontend build,
   `pip-audit` and a full-history secret scan on every push
 
 ---
@@ -169,6 +169,7 @@ restricted CORS, and a full audit trail. Verified against the live host.
 | [docs/CONNECTORS.md](docs/CONNECTORS.md) | government-database connector interface |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | demo video shot scripts |
 | [docs/TASKS.md](docs/TASKS.md) | build log and audit history |
+| [docs/HANDOFF.md](docs/HANDOFF.md) | session handoff — current state, pending work, how to continue on another machine |
 
 ---
 
