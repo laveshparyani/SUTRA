@@ -4,7 +4,7 @@
     {
       "name": "sutra-api",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "cd /d C:\\Users\\Admin\\Projects\\SUTRA\\backend && ..\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --port 8010"],
+      "runtimeArgs": ["/c", "cd /d C:\\Users\\Admin\\Projects\\SUTRA\\backend && set SUTRA_INGEST_BUDGET=10&& ..\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --port 8010"],
       "port": 8010
     },
     {

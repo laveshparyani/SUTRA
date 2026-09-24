@@ -34,3 +34,6 @@ infra/tunnel/
 
 # root node_modules from the presentation build tool (pptxgenjs, --no-save)
 /node_modules/
+
+# Claude Code skills are per-developer tooling, not part of the submission
+.claude/skills/

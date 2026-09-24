@@ -45,7 +45,7 @@ All figures from the running system on a **CPU-only** machine (no GPU):
 - Plate detection + OCR — **30–75 ms/frame**
 - Scene analytics (person/vehicle) — **43 ms/frame**
 - Central tier memory — **102 MB** · Edge node with 9 cameras — **514 MB**
-- **59 automated tests** across 10 files · CI runs tests, frontend build,
+- **68 automated tests** across 11 files · CI runs tests, frontend build,
   `pip-audit` and a full-history secret scan on every push
 
 ---

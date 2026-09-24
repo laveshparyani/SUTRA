@@ -71,12 +71,23 @@ single CPU (no GPU present in the build machine).
 ## 3. Heterogeneous integration approach
 
 - **Source adapters.** One ingest worker abstraction over FFmpeg
-  (`http-progressive`, `rtsp` — forced TCP transport after field-testing showed
-  RTP-over-UDP silently dropped by firewalls — `file`, HLS-ready). Container and
-  codec heterogeneity (mp4/mkv/avi, H.264/HEVC) is handled by the decode layer;
-  workers discard mid-GOP joins (HEVC corruption), auto-reconnect with backoff,
-  and report per-camera health honestly (`connecting` is not `ok`;
-  `last_frame_at` advances only on decoded frames).
+  (`rtsp` — forced TCP after field-testing showed RTP-over-UDP silently dropped
+  by firewalls — cookie-authenticated `hls`, `http-progressive`, `file`;
+  ONVIF-ready). Codec heterogeneity (H.264/H.265, mixed resolutions) is
+  handled by the decode layer; workers tolerate join-time decoder warnings,
+  sample on packet arrival so a looping source's PTS discontinuity cannot
+  stall them, auto-reconnect with exponential backoff, and report per-camera
+  health honestly (`connecting` is not `ok`; `last_frame_at` advances only on
+  decoded frames).
+- **Proven against a moving target.** The sandbox portal changed three times
+  during the build (progressive MP4 chunks → a rehosted copy → a credentialed
+  RTSP/WebRTC gateway with AES-encrypted HLS behind a login). Each move was
+  absorbed in the adapter and discovery layer; the registry, analytics, alerting
+  and UI did not change. That is the federation property the HLD claims, tested.
+- **Credential hygiene.** Source credentials (the portal's per-participant
+  email and access password) live only in the edge node's environment; the
+  registry stores credential-free URLs and the sampler injects them at
+  stream-open time and redacts them from logs, errors and API responses.
 - **VMS federation.** Vendor VMS/NVR systems integrate through the same adapter
   contract (discover / probe / open_stream / health); ONVIF Profile S/T and
   vendor SDK adapters are additive modules, no core change. The hackathon
@@ -96,8 +107,10 @@ a budgeted resource:
   cameras; a watchlist hit **boosts** the alert camera *and its nearest
   neighbours* to resident slots — coverage tightens around a sighting instead
   of rotating away from it.
-- Field-measured on the hackathon portal (which sustains ~8–10 concurrent
-  streams): budget respected, rotation verified, boost verified end-to-end.
+- Field-measured on both generations of the hackathon portal (the August
+  portal sustained ~8–10 concurrent progressive streams per client IP; the
+  September RTSP gateway serves each client its own copy at ~10 s to first
+  frame): budget respected, rotation verified, boost verified end-to-end.
 - Viewing is relayed (one ingest connection serves all viewers via MJPEG/WebRTC
   relay), never fanned out to sources.
 
