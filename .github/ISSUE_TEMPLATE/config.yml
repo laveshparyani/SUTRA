@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/laveshparyani/SUTRA/security/advisories/new
+    about: Report privately. Never open a public issue for a security finding.
+  - name: Architecture and design
+    url: https://github.com/laveshparyani/SUTRA/blob/main/docs/HLD.md
+    about: The High-Level Design covers integration, analytics, security and scaling to 80,000 cameras.
+  - name: Feed portal problems
+    url: https://cctv.corp8.cloud/resource
+    about: Camera feeds are operated by the hackathon organisers — confirm status on the live grid first.

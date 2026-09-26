@@ -1,0 +1,55 @@
+name: Feature or capability
+description: Propose a capability, integration or analytics module
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What operational problem does this solve?
+      description: |
+        Describe it from a control room's point of view — what an operator or
+        investigator currently cannot do, and what it costs them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed capability
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which module would own it?
+      options:
+        - Atlas — registry & GIS
+        - Bridge — adapters & ingest
+        - Insight — AI analytics
+        - Watch — watchlist & alerting
+        - Command — control-room UI
+        - New module
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: scale
+    attributes:
+      label: How does it behave at statewide scale?
+      description: |
+        SUTRA targets ~80,000 cameras on constrained links, with video kept at
+        the edge and only metadata flowing up. Anything that needs video
+        centralised, or that grows per-camera cost meaningfully, needs an
+        argument for why it earns that.
+
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy and accountability implications
+      description: |
+        This platform handles people who are not suspects. Note any new
+        personal data processed, who can see it, and what the audit trail
+        should record. Capabilities that identify individuals automatically
+        need a human-confirmation step, as the FRS roadmap does.
