@@ -1,0 +1,78 @@
+name: Bug report
+description: Something in the platform behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do **not** use this form for security issues — follow
+        [SECURITY.md](https://github.com/laveshparyani/SUTRA/blob/main/.github/SECURITY.md)
+        so the report stays private.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which part of the platform?
+      options:
+        - Atlas — registry, GIS map, gap analysis
+        - Bridge — camera ingest, scheduler, streaming
+        - Insight — ANPR, plate reads, scene analytics
+        - Watch — watchlist, alerts, government-DB connectors
+        - Command — control-room UI
+        - Edge ↔ central sync
+        - Deployment / CI
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit or deployment
+      description: Commit SHA, or the hosted URL if you saw it there.
+      placeholder: "b02cb1c, or https://sutra-central.onrender.com"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+      description: Exact error text beats a paraphrase. Screenshots help for UI issues.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in as operator_police
+        2. Open Trace and search GJ01D7553
+        3. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: camera
+    attributes:
+      label: Camera details, if feed-related
+      description: |
+        Camera id, protocol (RTSP / HLS / file), and the client-side error log.
+        Per the portal's integrator guide, join-time decoder warnings such as
+        `Could not find ref with POC` are expected and self-correct — please
+        confirm the camera is up on the live grid before reporting it down.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows 11, Python 3.13, FFmpeg 9, Chrome 140, edge role"
