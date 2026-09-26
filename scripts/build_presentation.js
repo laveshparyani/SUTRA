@@ -99,7 +99,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   const facts = [
     ["38", "cameras onboarded"],
     ["11", "districts · 7 departments"],
-    ["59", "automated tests green"],
+    ["174", "automated tests green"],
     ["17/17", "live API endpoints"],
   ];
   facts.forEach(([big, small], i) => {
@@ -167,7 +167,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   const mods = [
     ["COMMAND", "React + Leaflet control room", "Overview map · video wall · vehicle trace · alert centre · registry · coverage analysis · audit", AMBER],
     ["ATLAS", "Registry & GIS foundation (Model 1)", "Bulk/API/manual onboarding · layered GIS map · camera health · gap & ageing analysis · CSV export · audit trail", "5B8FB9"],
-    ["BRIDGE", "Source adapters & federation (Model 3)", "http-progressive · RTSP over TCP · file · HLS/ONVIF-ready · adaptive ingest scheduler · shared MJPEG relay", "5B8FB9"],
+    ["BRIDGE", "Source adapters & federation (Model 3)", "RTSP over TCP (credentialed) · cookie-gated HLS · http-progressive · file · ONVIF-ready · adaptive ingest scheduler · shared MJPEG relay", "5B8FB9"],
     ["INSIGHT", "AI video analytics", "YOLOv9-t plate detection → CCT-S OCR → temporal voting → Indian-plate normalisation · YOLOX-nano scene analytics · route reconstruction", "5B8FB9"],
     ["WATCH", "Watchlist correlation & alerting", "Fuzzy matcher · severity model · WebSocket push · gov-DB connectors (VAHAN / SARTHI / eGujCop / AFIS contract)", "5B8FB9"],
   ];
@@ -318,59 +318,61 @@ function panel(slide, x, y, w, h, fill = INK_2) {
 
 /* -------------------------------------- 8 measured infrastructure (the edge) */
 {
-  const s = darkSlide("We measured the network before designing for it", "Key innovation");
+  const s = darkSlide("The sandbox moved three times. The platform did not.", "Key innovation");
   s.addText(
-    "The sandbox portal rations delivery per client IP. Independent probes at 10 and 20 " +
-    "concurrent connections returned the same aggregate — so opening more streams only " +
-    "thins each one. This is the constraint a statewide rollout actually faces.",
-    { x: 0.6, y: 1.62, w: 12.1, h: 0.62, fontSize: 13, color: ICE, lineSpacing: 19,
+    "Integration is where statewide rollouts fail: every department is a different vendor, protocol " +
+    "and access model. The hackathon sandbox rehearsed exactly that by changing under us — and SUTRA's " +
+    "adapter + discovery layer absorbed every change without touching registry, analytics, alerting or UI.",
+    { x: 0.6, y: 1.62, w: 12.1, h: 0.72, fontSize: 13, color: ICE, lineSpacing: 19,
       fontFace: B_FONT, isTextBox: true, margin: 0 }
   );
-  s.addChart(
-    pres.ChartType.bar,
-    [{ name: "Aggregate delivered (Mbps)", labels: ["4 streams", "10 streams", "20 streams"], values: [1.5, 5.0, 5.4] }],
-    {
-      x: 0.6, y: 2.45, w: 6.0, h: 3.5,
-      showTitle: true, title: "Portal throughput does not scale with connections",
-      titleColor: WHITE, titleFontSize: 12, titleFontFace: B_FONT,
-      chartColors: [AMBER], showLegend: false,
-      showValue: true, dataLabelPosition: "outEnd", dataLabelColor: WHITE,
-      dataLabelFontSize: 11, dataLabelFontFace: B_FONT, dataLabelFormatCode: "0.0",
-      catAxisLabelColor: ICE, valAxisLabelColor: MUTE,
-      catAxisLabelFontSize: 11, valAxisLabelFontSize: 10,
-      catAxisLabelFontFace: B_FONT, valAxisLabelFontFace: B_FONT,
-      valGridLine: { color: "24405E", size: 1 }, catGridLine: { style: "none" },
-      valAxisMaxVal: 7, plotArea: { fill: { color: INK } },
-    }
+  const hdr = { bold: true, color: WHITE, fill: { color: "24405E" }, fontSize: 10.5, fontFace: B_FONT };
+  const cell = { color: ICE, fontSize: 10, fontFace: B_FONT, fill: { color: INK } };
+  s.addTable(
+    [
+      [{ text: "Portal generation", options: hdr }, { text: "What the source looked like", options: hdr }, { text: "What SUTRA changed", options: hdr }],
+      [{ text: "Aug · live.sentinelgujarat.in", options: cell },
+       { text: "Progressive MP4/MKV/AVI chunks, ~5 Mb/s per client IP, 48 s to first frame", options: cell },
+       { text: "Adaptive scheduler sized to the source; http-progressive adapter", options: cell }],
+      [{ text: "Aug · live.corp8.cloud", options: cell },
+       { text: "Same API, new host, wider camera set", options: cell },
+       { text: "Discovery keyed on stable ids — rows updated in place", options: cell }],
+      [{ text: "Sep · cctv.corp8.cloud", options: cell },
+       { text: "Login-gated catalogue, credentialed RTSP (H.264 + H.265), AES-encrypted cookie HLS, looping feeds", options: cell },
+       { text: "Portal session module, RTSP + HLS adapters, PTS-safe sampling, credential redaction", options: cell }],
+    ],
+    { x: 0.6, y: 2.5, w: 6.3, colW: [1.55, 2.55, 2.2], border: { type: "solid", color: "24405E", pt: 0.75 },
+      rowH: [0.34, 0.78, 0.6, 0.9], valign: "top", margin: 0.06 }
   );
   const findings = [
-    ["~5 Mbps", "hard ceiling per client IP, regardless of connection count"],
-    ["48 s", "measured time to first frame — a short dwell window never yields a picture"],
-    ["3–4", "streams decodable in real time per IP, at ~1.5 Mbps each"],
+    ["~10 s", "to first frame on the September RTSP gateway, TCP-forced; each client gets its own copy"],
+    ["30 / 30", "cameras re-discovered in place after the rehost — detection history preserved"],
+    ["0", "changes to analytics, alerting or UI code across all three portal generations"],
   ];
   findings.forEach(([big, small], i) => {
     const y = 2.45 + i * 1.02;
-    panel(s, 6.85, y, 5.85, 0.9);
-    s.addText(big, { x: 7.12, y: y + 0.16, w: 1.55, h: 0.42, fontSize: 21, bold: true,
+    panel(s, 7.15, y, 5.55, 0.9);
+    s.addText(big, { x: 7.42, y: y + 0.16, w: 1.55, h: 0.42, fontSize: 21, bold: true,
       color: AMBER, fontFace: H_FONT, isTextBox: true, margin: 0 });
-    s.addText(small, { x: 8.72, y: y + 0.16, w: 3.75, h: 0.6, fontSize: 11.5, color: ICE,
+    s.addText(small, { x: 9.02, y: y + 0.16, w: 3.55, h: 0.6, fontSize: 11.5, color: ICE,
       lineSpacing: 15, fontFace: B_FONT, isTextBox: true, margin: 0 });
   });
-  panel(s, 6.85, 5.55, 5.85, 1.35, "24405E");
-  s.addText("So the scheduler is designed for it", {
-    x: 7.12, y: 5.75, w: 5.3, h: 0.3, fontSize: 13.5, bold: true, color: AMBER,
+  panel(s, 7.15, 5.55, 5.55, 1.35, "24405E");
+  s.addText("So the scheduler is designed for the source", {
+    x: 7.42, y: 5.75, w: 5.1, h: 0.3, fontSize: 13.5, bold: true, color: AMBER,
     fontFace: H_FONT, isTextBox: true, margin: 0,
   });
   s.addText(
-    "A concurrency budget sized to the source, 10-minute dwell rotation with " +
+    "A concurrency budget sized to what the source sustains, 10-minute dwell rotation with " +
     "least-recently-served fairness, operator pinning and alert-boost. All 30 network " +
-    "cameras are covered over time instead of 30 fighting for four sessions at once.",
-    { x: 7.12, y: 6.08, w: 5.3, h: 0.72, fontSize: 11, color: ICE, lineSpacing: 15,
+    "cameras are covered over time on one commodity machine.",
+    { x: 7.42, y: 6.08, w: 5.1, h: 0.72, fontSize: 11, color: ICE, lineSpacing: 15,
       fontFace: B_FONT, isTextBox: true, margin: 0 }
   );
   s.addNotes(
-    "This is the differentiator: characterising the infrastructure and designing to it, " +
-    "rather than assuming bandwidth and reporting failures as errors."
+    "This is the differentiator: the sandbox changed protocol, host and access model three times " +
+    "during the build, and only the adapter layer changed with it. That is the property a 26-department " +
+    "rollout needs. Credentials never enter the registry: injected at stream-open, redacted everywhere else."
   );
 }
 
@@ -499,7 +501,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
     });
   });
   panel(s, 0.6, 6.2, 12.1, 0.72, "1C3A2A");
-  s.addText("17/17 live API endpoints green · 59 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
+  s.addText("17/17 live API endpoints green · 174 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
     x: 0.6, y: 6.2, w: 12.1, h: 0.72, align: "center", valign: "middle", fontSize: 12.5,
     bold: true, color: GREEN, fontFace: B_FONT, isTextBox: true, margin: 0,
   });

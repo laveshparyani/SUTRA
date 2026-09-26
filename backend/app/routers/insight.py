@@ -339,13 +339,28 @@ def output_report(
 
     from fastapi.responses import Response
 
+    def _bound(value: str | None):
+        # ISO input in any common spelling ("2026-09-24T17:00:00Z", "...+05:30",
+        # "2026-09-24 17:00"); compared as datetimes, never as raw strings —
+        # on SQLite a "T" separator sorts above the stored space and silently
+        # filtered every row out
+        if not value:
+            return None
+        from datetime import datetime, timezone
+        try:
+            dt = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(422, f"invalid timestamp: {value!r}")
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+    since_dt, until_dt = _bound(since), _bound(until)
     q = db.query(Detection).filter(Detection.plate_text.isnot(None)).order_by(Detection.ts.asc())
     if camera_id:
         q = q.filter(Detection.camera_id == camera_id)
-    if since:
-        q = q.filter(Detection.ts >= since)
-    if until:
-        q = q.filter(Detection.ts <= until)
+    if since_dt:
+        q = q.filter(Detection.ts >= since_dt)
+    if until_dt:
+        q = q.filter(Detection.ts <= until_dt)
     dets = q.limit(20000).all()
     cams = {c.id: c for c in db.query(Camera).all()}
 

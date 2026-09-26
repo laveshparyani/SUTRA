@@ -26,6 +26,9 @@ from pathlib import Path
 
 import numpy as np
 
+from ..config import settings
+from . import portal
+
 log = logging.getLogger("sutra.ffreader")
 
 _FFMPEG: str | None = None
@@ -73,6 +76,30 @@ _ERROR_MEANINGS: dict[str, str] = {
 }
 
 
+# Decoder complaints that are normal when joining a live H.264/H.265 stream
+# mid-GOP: the portal's guide lists them explicitly, and they stop at the first
+# IDR frame. They are kept out of the error tail so a later, genuine failure —
+# or a clean end of stream — is not misreported as "corrupt stream".
+_JOIN_TIME_NOISE = (
+    "Could not find ref with POC",
+    "co located POCs unavailable",
+    "Error constructing the frame RPS",
+    "non-existing PPS",
+    "non-existing SPS",
+    "decode_slice_header error",
+    "no frame!",
+    "Missing reference picture",
+    "concealing",
+    "corrupt decoded frame",
+    "mmco: unref short failure",
+    "reference picture missing",
+)
+
+
+def is_join_noise(line: str) -> bool:
+    return any(marker in line for marker in _JOIN_TIME_NOISE)
+
+
 def explain_error(raw: str) -> str:
     """Plain-language cause for a raw FFmpeg stderr line.
 
@@ -99,8 +126,10 @@ class FFmpegFrameReader:
     """
 
     def __init__(self, url: str, width: int = 1920, height: int = 1080, fps: float = 1.0,
-                 is_rtsp: bool = False, timeout_s: int = 90):
+                 is_rtsp: bool = False, timeout_s: int = 90,
+                 headers: dict[str, str] | None = None):
         self.url = url
+        self.headers = dict(headers or {})
         self.width = max(160, int(width) or 1920)
         self.height = max(120, int(height) or 1080)
         self.fps = fps
@@ -123,18 +152,46 @@ class FFmpegFrameReader:
         )
         cmd = [exe, "-hide_banner", "-loglevel", "error", "-nostdin"]
         if self.is_rtsp:
-            cmd += ["-rtsp_transport", "tcp"]
+            # the RTSP demuxer takes its socket timeout as -timeout (µs) and
+            # rejects the generic -rw_timeout outright ("Option not found").
+            # Sampling cadence is driven by packet arrival time rather than the
+            # stream's PTS: the portal's feeds are recordings that loop, and at
+            # the loop point PTS jumps backwards — an fps filter keyed on PTS
+            # would then emit nothing until the clock caught up, hours later.
+            # Analytics timestamps come from the wall clock at receipt anyway.
+            cmd += ["-rtsp_transport", "tcp", "-timeout", str(self.timeout_s * 1_000_000),
+                    "-use_wallclock_as_timestamps", "1"]
+            if settings.rtsp_keyframes_only:
+                # decode I-frames only: ~4x less CPU per camera, one distinct
+                # frame per GOP instead of per second
+                cmd += ["-skip_frame", "nokey"]
         else:
+            # cookie-gated sources (the portal's HLS side) need the session
+            # cookie and a browser User-Agent on every playlist/segment fetch
+            ua = self.headers.get("User-Agent")
+            extra = {k: v for k, v in self.headers.items() if k != "User-Agent"}
+            if ua:
+                cmd += ["-user_agent", ua]
+            if extra:
+                cmd += ["-headers", "".join(f"{k}: {v}\r\n" for k, v in extra.items())]
             # the portal's chunks are plain MP4 with the index at the end and a
             # server that mishandles the range requests FFmpeg would use to
             # reach it; parsing progressively is both correct and what works
             cmd += ["-seekable", "0", "-reconnect", "1", "-reconnect_streamed", "1",
                     "-reconnect_delay_max", "5"]
+            cmd += ["-rw_timeout", str(self.timeout_s * 1_000_000)]
+        keyframes_only = self.is_rtsp and settings.rtsp_keyframes_only
         cmd += [
-            "-rw_timeout", str(self.timeout_s * 1_000_000),
             "-i", self.url,
             "-an", "-sn",
-            "-vf", f"fps={self.fps},{scale}",
+            # with keyframe-only decode the cadence is the GOP itself; an fps
+            # filter would just duplicate each keyframe to fill the gaps and
+            # send the same picture through inference several times
+            "-vf", scale if keyframes_only else f"fps={self.fps},{scale}",
+        ]
+        if keyframes_only:
+            cmd += ["-fps_mode", "passthrough"]
+        cmd += [
             "-f", "rawvideo", "-pix_fmt", "bgr24", "pipe:1",
         ]
         try:
@@ -144,7 +201,7 @@ class FFmpegFrameReader:
                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             )
         except OSError:
-            log.exception("could not spawn ffmpeg for %s", self.url)
+            log.exception("could not spawn ffmpeg for %s", portal.redact_url(self.url))
             return False
         threading.Thread(target=self._drain_stderr, daemon=True).start()
         return True
@@ -157,8 +214,8 @@ class FFmpegFrameReader:
             return
         for raw in iter(proc.stderr.readline, b""):
             line = raw.decode("utf-8", "replace").strip()
-            if line:
-                self._stderr_tail = (self._stderr_tail + [line])[-5:]
+            if line and not is_join_noise(line):
+                self._stderr_tail = (self._stderr_tail + [portal.redact(line)])[-5:]
 
     def read(self) -> np.ndarray | None:
         """Next frame, or None when the stream ends or the process dies."""

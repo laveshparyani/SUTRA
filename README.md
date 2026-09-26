@@ -45,7 +45,7 @@ All figures from the running system on a **CPU-only** machine (no GPU):
 - Plate detection + OCR — **30–75 ms/frame**
 - Scene analytics (person/vehicle) — **43 ms/frame**
 - Central tier memory — **102 MB** · Edge node with 9 cameras — **514 MB**
-- **59 automated tests** across 10 files · CI runs tests, frontend build,
+- **174 automated tests** across 17 files · CI runs tests, frontend build,
   `pip-audit` and a full-history secret scan on every push
 
 ---
@@ -105,10 +105,19 @@ Create `backend/.env` to push metadata to a hosted central tier:
 SUTRA_ROLE=edge
 SUTRA_CENTRAL_URL=https://sutra-central.onrender.com
 SUTRA_SYNC_API_KEY=<key from the central tier's environment>
+# hackathon feed portal (cctv.corp8.cloud) — your registered email and the
+# access password it issued; used for RTSP and the cookie-gated HLS/catalogue
+SUTRA_PORTAL_EMAIL=<registered email>
+SUTRA_PORTAL_PASSWORD=<issued access password>
 ```
 
+The portal credentials never leave the edge node: the registry stores
+credential-free URLs and they are injected only when a stream is opened.
+
 Roles are `full` (all-in-one), `edge` (ingest + inference), `central`
-(command centre, no video decode).
+(command centre, no video decode). On a small edge node, `SUTRA_RTSP_KEYFRAMES_ONLY=true`
+decodes only keyframes: about a quarter of the CPU per camera, one frame per
+GOP (2–4 s on the portal feeds) instead of one per second.
 
 ---
 
@@ -160,12 +169,16 @@ restricted CORS, and a full audit trail. Verified against the live host.
 | [docs/CONNECTORS.md](docs/CONNECTORS.md) | government-database connector interface |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | demo video shot scripts |
 | [docs/TASKS.md](docs/TASKS.md) | build log and audit history |
+| [docs/HANDOFF.md](docs/HANDOFF.md) | session handoff — current state, pending work, how to continue on another machine |
 
 ---
 
 ## Key dates (2026)
 
 - **4 Aug** — registration opened
-- **7 Sep** — last date to apply / submit
-- **7 Sep, evening** — shortlisting
-- **10–11 Sep** — hackathon event, Grand Finale + results
+- **28 Sep** — last date to apply and upload the submission
+- **28 Sep** — shortlisting announcement
+- **12–13 Oct** — hackathon event at i-Hub Gujarat, Gandhinagar
+- **13 Oct** — results and prize distribution
+
+*(Organisers moved these twice: 29 Aug → 7 Sep → 28 Sep. Dates above match https://sentinel.gujarat.gov.in/schedule as of 24 Sep 2026.)*

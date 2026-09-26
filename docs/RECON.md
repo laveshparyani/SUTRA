@@ -1,3 +1,51 @@
+# Recon: the Sentinel Camera Grid (as of 24 Sep 2026)
+
+The feed portal has moved twice since August: `live.sentinelgujarat.in` →
+`live.corp8.cloud` → **`https://cctv.corp8.cloud`**, and it is now behind its
+own registration (system-issued access password, `XXXX-XXXX-XXXX`, separate
+from the hackathon-site account). Verified logged-in on 24 Sep 2026.
+
+## Endpoints that actually exist
+
+| What | Endpoint | Auth |
+|---|---|---|
+| Catalogue | `GET /cameras.json` → `[{id:"cam01".."cam30", name}]` | session cookie |
+| HLS | `https://cctv.corp8.cloud/<id>/index.m3u8` | session cookie **and** a browser User-Agent (403 "browser required" otherwise) |
+| RTSP | `rtsp://<email%40>:<password>@103.250.160.189:8554/stream/<id>` | credentials in the URL (mediamtx, 401 without) |
+| WebRTC | `http://…@103.250.160.189:8889/stream/<id>/whep` | same |
+
+The hackathon site's own Resource page describes `/api/ingest` and
+`<host>` placeholders; on the real portal `/api/ingest` is a 404. Trust the
+portal's `/resource` page, not the hackathon site's.
+
+## What the streams are
+
+- 30 cameras, `cam01`–`cam30`; the catalogue carries **only id and name** (the
+  name is the numbered location label, e.g. `04 Paldi Circle`). No codec,
+  resolution or coordinates. `camNN` is the same camera the first portal
+  called id NN, so `sentinel-NN` registry rows update in place.
+- RTSP is a genuine live loop: H.264 and H.265 mixed (cam17 is HEVC), 1080p25,
+  first frame in ~10 s over TCP. Ports 8554/8889 are open from Lavesh's
+  network **on the IP** — the CDN hostname never proxies them, so test the IP.
+- HLS is a **finished VOD playlist** (`#EXT-X-PLAYLIST-TYPE:VOD`, `ENDLIST`),
+  ~12 h per camera in 6 s AES-128 segments (cam30 only 3.4 h). The portal's
+  browser player fakes "live" by seeking to a wall-clock offset; FFmpeg starts
+  at hour zero. Fallback only.
+- Feeds loop with a hard scene cut; PTS jumps at the loop point, so ingest
+  samples on packet arrival time (`-use_wallclock_as_timestamps 1`) instead.
+- Cookie is `sentinel`, HttpOnly, Max-Age one year. Login is a plain form POST
+  to `/auth/login` (302 on success, 200 re-rendered form on failure).
+
+## SUTRA changes made for this portal (24 Sep)
+
+`services/portal.py` (login, cookie cache, credential injection + redaction),
+`services/discovery.py` (cameras.json), `services/ffreader.py` (RTSP
+`-timeout`, cookie/UA headers, join-time decoder noise ignored),
+`services/sampler.py` (credentials injected at open, never stored or logged).
+Credentials: `SUTRA_PORTAL_EMAIL` / `SUTRA_PORTAL_PASSWORD` in `backend/.env`.
+
+---
+
 # Recon: live.sentinelgujarat.in (as of 18 Aug 2026)
 
 Findings from probing the hackathon's live feed portal.

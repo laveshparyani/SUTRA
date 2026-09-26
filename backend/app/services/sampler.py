@@ -32,7 +32,7 @@ import cv2  # noqa: E402
 from ..config import settings
 from ..db import SessionLocal
 from ..models import Camera
-from . import ffreader
+from . import ffreader, portal
 
 log = logging.getLogger("sutra.sampler")
 
@@ -78,7 +78,7 @@ class CameraWorker(threading.Thread):
         self._last_db = 0.0
 
     def run(self) -> None:
-        log.info("cam %s: ingest starting (%s)", self.camera_id, self.source_url)
+        log.info("cam %s: ingest starting (%s)", self.camera_id, portal.redact_url(self.source_url))
         # a restarted worker must not inherit the previous generation's cached
         # frame: until this one decodes something the camera has no picture
         with _latest_lock:
@@ -102,10 +102,24 @@ class CameraWorker(threading.Thread):
                 pass
         failures = 0
         while not self.stop_flag.is_set():
+            # the registry holds credential-free URLs; the portal's RTSP
+            # gateway wants them in the URL and its HLS side wants a session
+            # cookie, both injected here and never persisted or logged
+            headers: dict[str, str] = {}
+            try:
+                headers = portal.http_headers(self.source_url)
+            except portal.PortalAuthError as exc:
+                self.last_error = str(exc)
+                self._update_health("down", self.last_error)
+                if self.stop_flag.wait(min(settings.reconnect_backoff_s * (2 ** failures), 300.0)):
+                    break
+                failures += 1
+                continue
             reader = ffreader.FFmpegFrameReader(
-                self.source_url, width=w, height=h,
+                portal.authenticate_url(self.source_url), width=w, height=h,
                 fps=max(0.2, 1.0 / max(settings.sample_interval_s, 0.1)),
                 is_rtsp=self.source_url.lower().startswith("rtsp://"),
+                headers=headers,
             )
             if not reader.start():
                 self.last_error = "could not start decoder"
@@ -186,7 +200,7 @@ class CameraWorker(threading.Thread):
         # other camera's (re)open. Failing sources must back off exponentially.
         consecutive_failures = 0
         while not self.stop_flag.is_set():
-            cap = cv2.VideoCapture(self.source_url, cv2.CAP_FFMPEG)
+            cap = cv2.VideoCapture(portal.authenticate_url(self.source_url), cv2.CAP_FFMPEG)
             if not cap.isOpened():
                 consecutive_failures += 1
                 backoff = min(settings.reconnect_backoff_s * (2 ** consecutive_failures), 300.0)

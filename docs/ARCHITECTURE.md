@@ -27,7 +27,7 @@ becomes the submitted HLD document.
                                 │ sampled frames / streams (Redis→Kafka)
 ┌───────────────────────────────┴──────────────────────────────────────┐
 │                          SUTRA BRIDGE                                │
-│   adapter framework: http-progressive · HLS · RTSP · ONVIF ·         │
+│   adapter framework: RTSP (credentialed) · HLS (cookie) · http · ONVIF ·         │
 │   vendor SDK · file — normalises heterogeneous sources               │
 │   stream relay (WebRTC/HLS out) · health probes                      │
 └───────────────────────────────▲──────────────────────────────────────┘
