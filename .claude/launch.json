@@ -4,13 +4,19 @@
     {
       "name": "sutra-api",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "cd /d C:\\Users\\Admin\\Projects\\SUTRA\\backend && set SUTRA_INGEST_BUDGET=6&& set SUTRA_RTSP_KEYFRAMES_ONLY=true&& ..\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --port 8010"],
+      "runtimeArgs": [
+        "/c",
+        "cd backend && set SUTRA_INGEST_BUDGET=6&& set SUTRA_RTSP_KEYFRAMES_ONLY=true&& ..\\.venv\\Scripts\\python.exe -m uvicorn app.main:app --port 8010"
+      ],
       "port": 8010
     },
     {
       "name": "sutra-command",
       "runtimeExecutable": "cmd",
-      "runtimeArgs": ["/c", "set SUTRA_API_URL=http://127.0.0.1:8010&& npm run dev --prefix C:\\Users\\Admin\\Projects\\SUTRA\\frontend"],
+      "runtimeArgs": [
+        "/c",
+        "set SUTRA_API_URL=http://127.0.0.1:8010&& npm run dev --prefix frontend"
+      ],
       "port": 5173
     }
   ]
