@@ -1,6 +1,7 @@
 # Submission artifacts — SUTRA
 
-Gujarat Police CCTV Integration Hackathon 2026 · Category 1 · Lavesh Paryani and Hiral Kotwani
+Gujarat Police CCTV Integration Hackathon 2026 · Category 1
+Built by Lavesh Paryani (https://github.com/laveshparyani) and Hiral Kotwani (https://github.com/hiralkotwani01)
 Repository: https://github.com/laveshparyani/SUTRA
 Hosted platform: https://sutra-central.onrender.com
 
