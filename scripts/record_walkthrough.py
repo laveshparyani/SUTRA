@@ -108,7 +108,12 @@ def login(page, user, pw):
     page.fill("input[placeholder='password']", pw)
     page.wait_for_timeout(350)
     page.click("button:has-text('Sign In')")
-    page.wait_for_timeout(2600)
+    # Wait for the application shell, not for a fixed interval. A blind wait
+    # let a slow sign-in through once: the closing shot was recorded against a
+    # login form still reading AUTHENTICATING, and the step still reported a
+    # pass because nothing checked where it had landed.
+    page.wait_for_selector("nav a[href='/']", state="visible", timeout=30000)
+    page.wait_for_timeout(1200)
 
 
 def drop_streams(page):
@@ -138,6 +143,16 @@ def count(page, selector):
     return page.locator(selector).count()
 
 
+def plural(n, one, many=None):
+    """"1 alert episode" / "25 alert episodes".
+
+    The verdicts are read off the screen by whoever watches the take, so a
+    count spliced into a fixed plural reads as a typo in the platform rather
+    than in the recorder.
+    """
+    return f"{n} {one if n == 1 else (many or one + 's')}"
+
+
 # --------------------------------------------------------------- the actions
 # Each returns the verdict text. Raising marks the step as an issue and the
 # recorder continues, so one broken check costs a step and not the take.
@@ -162,7 +177,7 @@ def a_reg_metadata(s):
     s.pause(4)
     s.clear()
     s.scroll(600, 5)
-    return f"{rows} cameras, 7 departments"
+    return f"{plural(rows, 'camera')}, 7 departments"
 
 
 def a_reg_discover(s):
@@ -192,7 +207,7 @@ def a_reg_filter(s):
     after = count(s.page, "table.grid tbody tr")
     sel.select_option(index=0)
     s.pause(1)
-    return f"{before} rows narrowed to {after}"
+    return f"{plural(before, 'row')} narrowed to {after}"
 
 
 def a_reg_export(s):
@@ -294,7 +309,7 @@ def a_anpr_live(s):
     s.ring("table.grid", f"{rows} vehicles read from live feeds")
     s.pause(4)
     s.clear()
-    return f"{rows} vehicles from the government feeds"
+    return f"{plural(rows, 'vehicle')} from the government feeds"
 
 
 def a_anpr_grouping(s):
@@ -375,7 +390,7 @@ def a_watch_list(s):
     s.ring("table.grid", "stolen vehicles with FIR references")
     s.pause(4)
     s.clear()
-    return f"{rows} watchlist entries"
+    return plural(rows, "watchlist entry", "watchlist entries")
 
 
 def a_watch_add(s):
@@ -396,7 +411,7 @@ def a_alert_list(s):
         thumb.click()
         s.pause(4)
         close_lightbox(s.page)
-    return f"{rows} alert episodes with annotated evidence"
+    return f"{plural(rows, 'alert episode')} with annotated evidence"
 
 
 def a_alert_episodes(s):
@@ -416,7 +431,8 @@ def a_alert_episodes(s):
             e.click()
             s.pause(2)
     eps = count(s.page, "table.grid tbody tr")
-    return f"{raw} individual hits collapse to {eps} episodes" if raw else "grouped into episodes"
+    return (f"{plural(raw, 'individual hit')} collapsed into {plural(eps, 'episode')}"
+            if raw else "grouped into episodes")
 
 
 def a_alert_probable(s):
@@ -520,11 +536,17 @@ def a_sec_rbac(s):
     s.ring("table.grid", "viewer role: no actions offered")
     s.pause(4)
     s.clear()
-    return f"viewer sees data, {'no' if add == 0 else add} action controls"
+    return ("viewer sees data, no action controls" if add == 0
+            else f"viewer sees data, {plural(add, 'action control')}")
 
 
 def a_closing(s):
     login(s.page, ADMIN, ADMIN_PW)
+    # login() navigates, which wipes the annotation layer with the page
+    s.overlay()
+    s.js(f"wt.badge({s.ref!r}, {s.title!r})")
+    if not count(s.page, ".stat-row"):
+        raise AssertionError("closing shot did not land on the overview")
     s.pause(2)
     s.scroll(400, 4)
     s.pause(3)
@@ -579,7 +601,12 @@ def main() -> int:
                                 "trace": traceback.format_exc()[-600:]})
                 mark = "ISSUE"
             st.hold()
-            print(f"  {mark:<5} {ref:<6} {title[:44]:<46} {secs:5.1f}s", flush=True)
+            # Report what the step actually took, not what it was budgeted:
+            # printing the budget hid a two-hundred-second stall completely.
+            actual = time.monotonic() - st.start
+            flag = "  <-- overran" if actual > secs + 2 else ""
+            print(f"  {mark:<5} {ref:<6} {title[:44]:<46} "
+                  f"{secs:5.1f}s  took {actual:5.1f}s{flag}", flush=True)
 
         ctx.close()
         browser.close()
