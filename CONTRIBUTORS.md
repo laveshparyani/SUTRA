@@ -3,8 +3,8 @@
 SUTRA was built by two people for the Gujarat Police CCTV Integration
 Challenge 2026.
 
-- **Lavesh Paryani**
-- **Hiral Kotwani** — backend and system design
+- **Lavesh Paryani** — [@laveshparyani](https://github.com/laveshparyani)
+- **Hiral Kotwani** — [@hiralkotwani01](https://github.com/hiralkotwani01)
 
 ## A note on the commit history
 
