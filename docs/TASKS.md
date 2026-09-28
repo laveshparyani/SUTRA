@@ -117,3 +117,24 @@ Keep-warm pinger: cron-job.org every 10 min -> /api/health (60s timeout).
 | Portal capacity characterised: ~5 Mbps/IP ration → 3-4 live streams per IP | INFO | measured (10 vs 20 conns); email to organizers sent; rotation covers all 30 | ✅ measured |
 
 All 21 API endpoints verified 200 with real data · 34 tests passing · frontend builds clean.
+
+---
+
+## Audit — 28 Sep 2026 (submission day)
+
+Found by running the acceptance plan in [TESTING.md](TESTING.md) end to end
+against the live system rather than by reading code. The recorded run is
+`submission/SUTRA_verification_walkthrough.mp4` (31 of 31 passed).
+
+| Finding | Severity | Fix | Verified |
+|---|---|---|---|
+| Detections view crashed to a blank page when switching back to Vehicles: rows outlived the mode that fetched them, so the new branch rendered against the previous tab's payload and `v.cameras.join` threw, unmounting the app | HIGH | rows stored together with their mode; a mismatch renders empty for the moment the fetch is in flight | ✅ 0 page errors, 0 failed requests, all three tabs render |
+| Same mismatch prefixed an already-absolute snapshot path again, requesting `/data//data/...` | MED | resolved by the same change | ✅ 32 failed image loads → 0 |
+| API would not have restarted: `Settings` forbade extra inputs, so two unrelated keys in `backend/.env` made every `Settings()` raise — the whole test suite failed at collection, 0 tests run | HIGH | extras ignored; the file is shared with tooling that is not the service | ✅ 175 passing; `Settings()` constructed against the real `.env` |
+| Edge→central sync failed 500 on every batch and retried forever: an alert and the detection it was raised from share a snapshot, and with `autoflush=False` the pending `Evidence` row was invisible to the second lookup, so both were inserted against a unique constraint | HIGH | paths staged for the life of the request; regression test pins the conditions, watchlist entry included | ✅ live sync 200, including batches carrying alerts |
+| Evidence URLs arriving over the sync channel were passed straight to `<img src>` (CodeQL: client-side XSS, open redirect) | MED | only same-origin `/data/` image paths render, no traversal segments; applied at all four such sinks | ✅ every thumbnail still resolves, 0 emptied `src` |
+| CodeQL "uncontrolled data in path expression" ×4 | INFO | **false positives** — the paths are resolved then confined to the data root with an extension allowlist, covered by `test_media_path_traversal_blocked` and `test_file_source_confined_to_data_dir` | ✅ no change warranted |
+| `SUTRA_SYNC_API_KEY` had been exposed in a working session | MED | rotated on both tiers | ✅ new key 200, old key 401 |
+
+175 tests passing · frontend builds clean · CodeQL and dependency scanning on
+every push · `dev` and `main` in step.

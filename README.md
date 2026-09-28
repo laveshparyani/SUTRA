@@ -64,7 +64,8 @@ SUTRA/
 ├── frontend/           React + Vite + Leaflet control room (9 pages)
 ├── docs/               HLD, architecture, security, deployment, demo scripts
 ├── submission/         deliverables — presentation, output reports, registry CSV
-├── scripts/            utilities (presentation builder, backfills)
+├── scripts/            utilities (presentation builder, backfills, the
+│                       narrated screen-recording and encoding pipeline)
 ├── infra/              deployment configs, edge-node installers
 └── render.yaml         one-click blueprint for the hosted central tier
 ```
@@ -167,6 +168,8 @@ restricted CORS, and a full audit trail. Verified against the live host.
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | sizing, hosting options, deployment guide |
 | [docs/SETUP_STEPS.md](docs/SETUP_STEPS.md) | hosted-deployment walkthrough |
 | [docs/CONNECTORS.md](docs/CONNECTORS.md) | government-database connector interface |
+| [docs/TESTING.md](docs/TESTING.md) | **acceptance test plan** — every hackathon requirement with the steps that prove it |
+| [docs/CHECKLIST.md](docs/CHECKLIST.md) | requirements audited against the official problem statement |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | demo video shot scripts |
 | [docs/TASKS.md](docs/TASKS.md) | build log and audit history |
 | [docs/HANDOFF.md](docs/HANDOFF.md) | session handoff — current state, pending work, how to continue on another machine |
