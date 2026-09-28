@@ -1,0 +1,87 @@
+1
+00:00:00,050 --> 00:00:09,510
+This is SUTRA — Statewide Unified Tracking, Registry and Analytics, built for the Gujarat Police CCTV Integration Challenge.
+
+2
+00:00:09,510 --> 00:00:20,122
+It is a hybrid of Model One and Model Three: a camera registry with G I S, plus a federation layer bringing multiple vendors' feeds into one platform.
+
+3
+00:00:20,122 --> 00:00:22,758
+Everything here is a running system.
+
+4
+00:00:22,870 --> 00:00:34,151
+The Atlas registry has onboarded cameras across five departments — Government feeds from the challenge portal, recorded file sources, and an R T S P relay.
+
+5
+00:00:34,151 --> 00:00:39,640
+Each marker is a real camera with its department, location and live health.
+
+6
+00:00:39,740 --> 00:00:42,937
+Live connections are a budgeted resource.
+
+7
+00:00:42,937 --> 00:00:54,893
+The portal serves only a few concurrent streams per client, so an adaptive scheduler time-multiplexes the cameras: pinned cameras hold their slots, the rest rotate on a dwell timer.
+
+8
+00:00:54,893 --> 00:00:59,690
+Health is reported honestly — connecting is not the same as live.
+
+9
+00:00:59,800 --> 00:01:02,576
+Live viewing of the federated feeds.
+
+10
+00:01:02,576 --> 00:01:12,956
+Alongside number plate recognition, every camera gets person and vehicle counts from an object detection sidecar — all C P U inference, no G P U anywhere.
+
+11
+00:01:12,956 --> 00:01:18,989
+Tiles that are not streaming say why: queued, connecting, or unreachable.
+
+12
+00:01:18,989 --> 00:01:23,024
+The system never shows a frozen frame and calls it live.
+
+13
+00:01:23,130 --> 00:01:33,446
+A representative watchlist — stolen vehicles, each with an F I R reference and a priority, mapping one to one onto e-Guj-Cop records in production.
+
+14
+00:01:33,446 --> 00:01:38,256
+Every plate read is cross referenced against this list continuously.
+
+15
+00:01:38,370 --> 00:01:48,659
+When a match fires, the operator gets the camera, the location, and the annotated evidence frame, enriched from a VAHAN shaped connector — make, model, owner, insurance status.
+
+16
+00:01:48,659 --> 00:01:55,222
+Where a match was fuzzy, it is labelled a probable match and shows the characters the camera actually read.
+
+17
+00:01:55,222 --> 00:01:59,393
+An operator is never handed an inference as a certainty.
+
+18
+00:01:59,510 --> 00:02:01,620
+The evaluation scenario.
+
+19
+00:02:01,620 --> 00:02:11,267
+Given a registration number, SUTRA reconstructs that vehicle's timestamped movement history across the network and draws it on the G I S map.
+
+20
+00:02:11,267 --> 00:02:22,000
+Where a vehicle was seen at one location only, it says so plainly rather than leaving an unexplained dot — a route line appears as soon as a second camera reads the same plate.
+
+21
+00:02:22,120 --> 00:02:32,735
+And every detection exports to a timestamped output report — camera, location, plate, confidence, U T C and I S T timestamps, and its evidence image.
+
+22
+00:02:32,735 --> 00:02:35,765
+All open source, running on one machine.
