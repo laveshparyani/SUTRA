@@ -8,12 +8,25 @@ steps, tick the box if it behaves as described, or write the failure in the
 A step that says *"should"* is the pass condition. If what you see differs,
 that is a defect even if nothing crashed.
 
-| | |
-|---|---|
-| Platform (local) | http://localhost:5173 — `admin` / `SutraAdmin@26` |
-| Platform (hosted) | https://sutra-central.onrender.com — `admin` / `Sutra#Gandhinagar26` |
-| API (local) | http://127.0.0.1:8010 |
-| Other roles | `operator_police` / `Operator@26` · `viewer` / `Viewer@26` |
+### Credentials and URLs
+
+**Local platform — http://localhost:5173** (API on http://127.0.0.1:8010)
+
+| Role | Username | Password | What it can do |
+|---|---|---|---|
+| Administrator | `admin` | `SutraAdmin@26` | Everything: onboarding, watchlist edits, acknowledgements, exports |
+| Department operator | `operator_police` | `Operator@26` | Police-department cameras only; can acknowledge alerts |
+| Viewer | `viewer` | `Viewer@26` | Read-only — action buttons should be absent |
+
+These are seeded sandbox accounts bound to localhost. They are the same three
+accounts §1.9 uses to test role-based access.
+
+**Hosted platform — https://sutra-central.onrender.com**
+
+Same three usernames. The hosted passwords are **different from the local
+ones** and are deliberately not written down in this repository — it is public,
+and the hosted instance is the live judge-facing URL. Use the password recorded
+in the submission form (or your password manager) for §8.
 
 ---
 
@@ -239,7 +252,7 @@ that is a defect even if nothing crashed.
 - [ ] **8.1 — Judge URL is up.** Open https://sutra-central.onrender.com in a **private window**.
   1. Should load the SUTRA login page.
 
-- [ ] **8.2 — Judge credentials work.** Sign in as `admin` / `Sutra#Gandhinagar26`.
+- [ ] **8.2 — Judge credentials work.** Sign in as `admin` with the hosted password from the submission form.
   1. Should sign in successfully.
 
 - [ ] **8.3 — Hosted platform has real data.** Visit Overview, Registry, Detections, Alerts, Atlas, Trace.
