@@ -9,7 +9,8 @@ Hosted platform: https://sutra-central.onrender.com
 |---|---|
 | `SUTRA_Solution_Presentation.pptx` | Solution presentation (deliverable 1) |
 | `SUTRA_HLD.pdf` | High-Level Design / technical proposal (deliverable 2) |
-| `SUTRA_workflow_diagram.svg` | Workflow / integration diagram — sources → edge node → central tier, plus the onboard-to-trace operational flow (one page, for the submission form's diagram field) |
+| `screenshots/` | Ten annotated screenshots of the control room, one per page, each with a caption and highlights (see its README) |
+| `SUTRA_workflow_diagram.svg` / `.png` | Workflow / integration diagram — sources → edge node → central tier, plus the onboard-to-trace operational flow (one page, for the submission form's diagram field) |
 | `SUTRA_own_feed_demo_captioned.mp4` | Demo video 1 — own feed, narrated, captions burned in (2:36) |
 | `SUTRA_government_feed_demo_captioned.mp4` | Demo video 2 — the challenge portal's cameras, narrated (2:31) |
 | `SUTRA_verification_walkthrough.mp4` | **Verification walkthrough** — every acceptance test in `docs/TESTING.md` run against the live system, annotated with its test reference and verdict (6:04) |
