@@ -97,7 +97,12 @@ class Settings(BaseSettings):
     seed_operator_pw: str = ""
     seed_viewer_pw: str = ""
 
-    model_config = {"env_prefix": "SUTRA_", "env_file": ".env"}
+    # "ignore" rather than the default "forbid": the .env file is shared with
+    # tooling that is not the service — the narration script keeps its own keys
+    # there — and an unrelated entry should never stop the platform starting.
+    # It did: two keys added for the voice synthesis made every Settings() call
+    # raise, which takes down the API and the whole test suite with it.
+    model_config = {"env_prefix": "SUTRA_", "env_file": ".env", "extra": "ignore"}
 
     @property
     def database_url(self) -> str:

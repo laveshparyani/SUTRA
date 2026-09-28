@@ -121,3 +121,43 @@ def test_detection_for_unknown_camera_is_dropped_not_crashed(central):
 def test_payload_validation(central):
     r = central.post("/api/sync/push", json={"detections": [{"plate_text": "x"}]}, headers={"X-Sync-Key": KEY})
     assert r.status_code == 422
+
+
+def test_detection_and_its_alert_may_share_one_snapshot(central):
+    """An alert and the detection it was raised from carry the same image.
+
+    The session runs with autoflush off, so the Evidence row added for the
+    detection is invisible to the alert's lookup until something flushes.
+    Adding it twice violates Evidence.path's unique constraint at commit, and
+    the whole push fails — which is what the hosted tier was doing. The
+    watchlist entry has to exist beforehand to reproduce it: creating one
+    flushes, and the flush hid the bug on a first-ever sync.
+    """
+    shared = "detections/apit-shared/s1.jpg"
+    b64 = base64.b64encode(JPEG).decode()
+    seed = {
+        "node": "apit-edge",
+        "cameras": [{"external_id": "apit-shared-cam", "name": "Shared", "location": "X"}],
+        "detections": [],
+        "alerts": [{"plate": "GJ95SY7777", "camera_external_id": "apit-shared-cam",
+                    "ts": "2026-09-21T09:00:00Z", "reason": "stolen", "fir_ref": "FIR/SHARED/1",
+                    "snapshot_path": "alerts/apit-shared/seed.jpg", "snapshot_b64": b64}],
+    }
+    assert central.post("/api/sync/push", json=seed, headers={"X-Sync-Key": KEY}).status_code == 200
+
+    both = {
+        "node": "apit-edge",
+        "cameras": [],
+        "detections": [{"camera_external_id": "apit-shared-cam", "ts": "2026-09-21T10:00:00Z",
+                        "plate_text": "GJ95SY7777", "plate_conf": 0.93,
+                        "snapshot_path": shared, "snapshot_b64": b64}],
+        # a second apart, so this pair is not also a duplicate observation —
+        # the retention dedup tests count those, and the shared snapshot is
+        # the only condition this test is about
+        "alerts": [{"plate": "GJ95SY7777", "camera_external_id": "apit-shared-cam",
+                    "ts": "2026-09-21T10:00:01Z", "reason": "stolen", "fir_ref": "FIR/SHARED/1",
+                    "snapshot_path": shared, "snapshot_b64": b64}],
+    }
+    r = central.post("/api/sync/push", json=both, headers={"X-Sync-Key": KEY})
+    assert r.status_code == 200, r.text
+    assert r.json()["detections_new"] == 1 and r.json()["alerts_new"] == 1

@@ -1,0 +1,283 @@
+{
+  "wt": [
+    {
+      "shot": "wt_intro",
+      "ref": "intro",
+      "title": "SUTRA \u2014 verification walkthrough",
+      "action": "intro",
+      "file": "wt_intro.mp3",
+      "duration": 22.22,
+      "start": 0
+    },
+    {
+      "shot": "wt_1_1",
+      "ref": "1.1",
+      "title": "Registry holds real camera metadata",
+      "action": "reg_metadata",
+      "file": "wt_1_1.mp3",
+      "duration": 16.37,
+      "start": 22.22
+    },
+    {
+      "shot": "wt_1_2",
+      "ref": "1.2",
+      "title": "API-based onboarding from the portal catalogue",
+      "action": "reg_discover",
+      "file": "wt_1_2.mp3",
+      "duration": 12.38,
+      "start": 38.59
+    },
+    {
+      "shot": "wt_1_3",
+      "ref": "1.3",
+      "title": "Search and filtering",
+      "action": "reg_filter",
+      "file": "wt_1_3.mp3",
+      "duration": 7.92,
+      "start": 50.97
+    },
+    {
+      "shot": "wt_1_4",
+      "ref": "1.4",
+      "title": "CSV export",
+      "action": "reg_export",
+      "file": "wt_1_4.mp3",
+      "duration": 9.12,
+      "start": 58.89
+    },
+    {
+      "shot": "wt_1_5",
+      "ref": "1.5",
+      "title": "GIS coverage map with layers",
+      "action": "atlas_map",
+      "file": "wt_1_5.mp3",
+      "duration": 14.52,
+      "start": 68.01
+    },
+    {
+      "shot": "wt_1_6",
+      "ref": "1.6",
+      "title": "Honest per-camera health",
+      "action": "wall_states",
+      "file": "wt_1_6.mp3",
+      "duration": 13.56,
+      "start": 82.53
+    },
+    {
+      "shot": "wt_1_7",
+      "ref": "1.7",
+      "title": "District gap analysis",
+      "action": "atlas_gap",
+      "file": "wt_1_7.mp3",
+      "duration": 9.46,
+      "start": 96.09
+    },
+    {
+      "shot": "wt_1_8",
+      "ref": "1.8",
+      "title": "Metadata audit trail",
+      "action": "atlas_audit",
+      "file": "wt_1_8.mp3",
+      "duration": 10.27,
+      "start": 105.55
+    },
+    {
+      "shot": "wt_2_1",
+      "ref": "2.1",
+      "title": "Heterogeneous sources, one platform",
+      "action": "fed_sources",
+      "file": "wt_2_1.mp3",
+      "duration": 14.18,
+      "start": 115.82
+    },
+    {
+      "shot": "wt_2_2",
+      "ref": "2.2",
+      "title": "Credentials are never stored with the camera",
+      "action": "fed_credentials",
+      "file": "wt_2_2.mp3",
+      "duration": 13.87,
+      "start": 130.0
+    },
+    {
+      "shot": "wt_2_3",
+      "ref": "2.3",
+      "title": "Government-database correlation",
+      "action": "fed_vahan",
+      "file": "wt_2_3.mp3",
+      "duration": 12.89,
+      "start": 143.87
+    },
+    {
+      "shot": "wt_3_1",
+      "ref": "3.1",
+      "title": "ANPR on the live government feeds",
+      "action": "anpr_live",
+      "file": "wt_3_1.mp3",
+      "duration": 10.73,
+      "start": 156.76
+    },
+    {
+      "shot": "wt_3_2",
+      "ref": "3.2",
+      "title": "Records collapse by vehicle",
+      "action": "anpr_grouping",
+      "file": "wt_3_2.mp3",
+      "duration": 12.12,
+      "start": 167.49
+    },
+    {
+      "shot": "wt_3_3",
+      "ref": "3.3",
+      "title": "Every read carries its evidence",
+      "action": "anpr_evidence",
+      "file": "wt_3_3.mp3",
+      "duration": 10.56,
+      "start": 179.61
+    },
+    {
+      "shot": "wt_3_4",
+      "ref": "3.4",
+      "title": "Confidence is published, not hidden",
+      "action": "anpr_confidence",
+      "file": "wt_3_4.mp3",
+      "duration": 18.24,
+      "start": 190.17
+    },
+    {
+      "shot": "wt_3_5",
+      "ref": "3.5",
+      "title": "Scene analytics beyond plates",
+      "action": "scene_counts",
+      "file": "wt_3_5.mp3",
+      "duration": 9.46,
+      "start": 208.41
+    },
+    {
+      "shot": "wt_4_1",
+      "ref": "4.1",
+      "title": "Watchlist database",
+      "action": "watch_list",
+      "file": "wt_4_1.mp3",
+      "duration": 10.78,
+      "start": 217.87
+    },
+    {
+      "shot": "wt_4_2",
+      "ref": "4.2",
+      "title": "Adding an entry is audited",
+      "action": "watch_add",
+      "file": "wt_4_2.mp3",
+      "duration": 6.82,
+      "start": 228.65
+    },
+    {
+      "shot": "wt_4_3",
+      "ref": "4.3",
+      "title": "Automated alerts with evidence",
+      "action": "alert_list",
+      "file": "wt_4_3.mp3",
+      "duration": 9.24,
+      "start": 235.47
+    },
+    {
+      "shot": "wt_4_4",
+      "ref": "4.4",
+      "title": "Alerts group into episodes",
+      "action": "alert_episodes",
+      "file": "wt_4_4.mp3",
+      "duration": 12.62,
+      "start": 244.71
+    },
+    {
+      "shot": "wt_4_5",
+      "ref": "4.5",
+      "title": "Fuzzy matches are labelled as fuzzy",
+      "action": "alert_probable",
+      "file": "wt_4_5.mp3",
+      "duration": 13.66,
+      "start": 257.33
+    },
+    {
+      "shot": "wt_4_6",
+      "ref": "4.6",
+      "title": "Acknowledgement workflow",
+      "action": "alert_ack",
+      "file": "wt_4_6.mp3",
+      "duration": 5.28,
+      "start": 270.99
+    },
+    {
+      "shot": "wt_5_1",
+      "ref": "5.1",
+      "title": "Trace a designated vehicle",
+      "action": "trace_search",
+      "file": "wt_5_1.mp3",
+      "duration": 9.43,
+      "start": 276.27
+    },
+    {
+      "shot": "wt_5_2",
+      "ref": "5.2",
+      "title": "Timestamped, location-wise movement history",
+      "action": "trace_timeline",
+      "file": "wt_5_2.mp3",
+      "duration": 11.23,
+      "start": 285.7
+    },
+    {
+      "shot": "wt_5_3",
+      "ref": "5.3",
+      "title": "Route on the GIS map",
+      "action": "trace_map",
+      "file": "wt_5_3.mp3",
+      "duration": 15.65,
+      "start": 296.93
+    },
+    {
+      "shot": "wt_5_4",
+      "ref": "5.4",
+      "title": "An unknown plate fails cleanly",
+      "action": "trace_unknown",
+      "file": "wt_5_4.mp3",
+      "duration": 8.23,
+      "start": 312.58
+    },
+    {
+      "shot": "wt_6_1",
+      "ref": "6.1",
+      "title": "Output report export",
+      "action": "report_export",
+      "file": "wt_6_1.mp3",
+      "duration": 12.36,
+      "start": 320.81
+    },
+    {
+      "shot": "wt_7_1",
+      "ref": "7.1",
+      "title": "No anonymous access to the API",
+      "action": "sec_anon",
+      "file": "wt_7_1.mp3",
+      "duration": 8.38,
+      "start": 333.17
+    },
+    {
+      "shot": "wt_7_2",
+      "ref": "7.2",
+      "title": "Role-based access control",
+      "action": "sec_rbac",
+      "file": "wt_7_2.mp3",
+      "duration": 10.99,
+      "start": 341.55
+    },
+    {
+      "shot": "wt_close",
+      "ref": "close",
+      "title": "Verification complete",
+      "action": "closing",
+      "file": "wt_close.mp3",
+      "duration": 11.21,
+      "start": 352.54
+    }
+  ]
+}
