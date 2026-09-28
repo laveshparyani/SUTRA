@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, fmtTime } from "../api";
+import { api, fmtTime, mediaSrc } from "../api";
 import { AreaChart, BandChart, BarList, ChartCard, StatTile, StatusDonut } from "../components/charts.jsx";
 import { CamMap } from "../components/CamMap.jsx";
 import { PlateChip } from "../components/PlateChip.jsx";
@@ -138,7 +138,7 @@ export function Dashboard() {
             {live.map((a) => (
               <div className={`alert-row ${a.priority === "high" ? "high" : "medium"}`}
                 key={`${a.alert_id}-${a.ts}`}>
-                {a.snapshot && <img className="thumb" src={a.snapshot} alt="" />}
+                {mediaSrc(a.snapshot) && <img className="thumb" src={mediaSrc(a.snapshot)} alt="" />}
                 <div className="meta">
                   <div className="row1">
                     <PlateChip plate={a.plate} />

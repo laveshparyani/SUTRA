@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, fmtTime } from "../api";
+import { api, fmtTime, mediaSrc } from "../api";
 import { CamMap } from "../components/CamMap.jsx";
 import { PlateChip } from "../components/PlateChip.jsx";
 
@@ -110,7 +110,7 @@ export function Trace() {
                 {s.district || "—"} · {s.detections} reads · conf {(s.best_conf * 100).toFixed(0)}%
               </div>
             </div>
-            {s.snapshot && <img src={s.snapshot} alt="" onClick={() => setZoom(s.snapshot)} style={{ cursor: "zoom-in" }} />}
+            {mediaSrc(s.snapshot) && <img src={mediaSrc(s.snapshot)} alt="" onClick={() => setZoom(mediaSrc(s.snapshot))} style={{ cursor: "zoom-in" }} />}
           </div>
         ))}
 
