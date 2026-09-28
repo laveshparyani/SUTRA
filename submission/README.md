@@ -17,6 +17,11 @@ Hosted platform: https://sutra-central.onrender.com
 | `sutra_anpr_output_report_full.csv` | Earlier combined run (own feed + government feed) |
 | `sutra_gov_feed_output_report_2026-09-24.csv` | Earlier government-feed run, first on the September portal |
 | `evidence_cam7/`, `sutra_gov_feed_output_report_cam7.csv` | August run against a single camera |
+| `*.srt`, `narration/` | Caption tracks and the narration audio, kept beside each video. The captions are already burned into the `_captioned` files; these are the sources, not a second thing to play. |
+
+The `_captioned` videos are the ones to watch. The plain `SUTRA_own_feed_demo.mp4`
+and `SUTRA_government_feed_demo.mp4` are the same takes before the subtitles were
+burned in, kept only so the captions can be regenerated without re-recording.
 
 ---
 
