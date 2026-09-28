@@ -1,0 +1,14 @@
+# Contributors
+
+SUTRA was built by two people for the Gujarat Police CCTV Integration
+Challenge 2026.
+
+- **Lavesh Paryani**
+- **Hiral Kotwani** — backend and system design
+
+## A note on the commit history
+
+Every commit in this repository is authored by `laveshparyani`, because the
+work was committed and pushed from a single account throughout the build. The
+single-author history reflects how the code reached the repository, not who
+designed and wrote it. This file is the accurate record of authorship.

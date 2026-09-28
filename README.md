@@ -1,6 +1,6 @@
 # SUTRA — Statewide Unified Tracking, Registry & Analytics
 
-**Gujarat Police CCTV Integration Hackathon 2026** · Category 1 (Individual) · Lavesh Paryani
+**Gujarat Police CCTV Integration Hackathon 2026** · Category 1 · Lavesh Paryani and Hiral Kotwani
 
 *"Sutra" — the thread that connects.* A federation layer weaving 26 departments'
 fragmented CCTV systems into one intelligent fabric: one registry, one map, one
@@ -168,6 +168,7 @@ restricted CORS, and a full audit trail. Verified against the live host.
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | sizing, hosting options, deployment guide |
 | [docs/SETUP_STEPS.md](docs/SETUP_STEPS.md) | hosted-deployment walkthrough |
 | [docs/CONNECTORS.md](docs/CONNECTORS.md) | government-database connector interface |
+| [CONTRIBUTORS.md](CONTRIBUTORS.md) | who built this |
 | [docs/TESTING.md](docs/TESTING.md) | **acceptance test plan** — every hackathon requirement with the steps that prove it |
 | [docs/CHECKLIST.md](docs/CHECKLIST.md) | requirements audited against the official problem statement |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | demo video shot scripts |
