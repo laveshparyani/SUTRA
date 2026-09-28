@@ -10,7 +10,7 @@ const pptxgen = require("pptxgenjs");
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.3 x 7.5 — set before any slide is added
-pres.author = "Lavesh Paryani";
+pres.author = "Lavesh Paryani and Hiral Kotwani";
 pres.title = "SUTRA — Statewide Unified Tracking, Registry & Analytics";
 
 // Control-room palette, matching the platform's own dark tactical UI: the deck
@@ -84,7 +84,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   s.addText(
     [
       { text: "Gujarat Police CCTV Integration Hackathon 2026", options: { bold: true, breakLine: true } },
-      { text: "Category 1 · Individual entry · Lavesh Paryani", options: { breakLine: true } },
+      { text: "Category 1 · Lavesh Paryani and Hiral Kotwani", options: { breakLine: true } },
       { text: "Hybrid architecture: Model 1 (mandatory) + Model 3", options: {} },
     ],
     { x: 0.95, y: 5.25, w: 8.2, h: 1.1, fontSize: 13, color: MUTE, lineSpacing: 20,
@@ -99,7 +99,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
   const facts = [
     ["38", "cameras onboarded"],
     ["11", "districts · 7 departments"],
-    ["174", "automated tests green"],
+    ["175", "automated tests green"],
     ["17/17", "live API endpoints"],
   ];
   facts.forEach(([big, small], i) => {
@@ -501,7 +501,7 @@ function panel(slide, x, y, w, h, fill = INK_2) {
     });
   });
   panel(s, 0.6, 6.2, 12.1, 0.72, "1C3A2A");
-  s.addText("17/17 live API endpoints green · 174 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
+  s.addText("17/17 live API endpoints green · 175 automated tests passing · zero duplicate records · real accumulated data from the government feeds", {
     x: 0.6, y: 6.2, w: 12.1, h: 0.72, align: "center", valign: "middle", fontSize: 12.5,
     bold: true, color: GREEN, fontFace: B_FONT, isTextBox: true, margin: 0,
   });
