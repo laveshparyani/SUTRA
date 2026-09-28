@@ -19,8 +19,10 @@ from pathlib import Path
 
 import edge_tts
 
-VOICE = "en-IN-PrabhatNeural"   # Indian English, male; matches the submitter
-RATE = "+0%"                    # default pace; -4% pushed video 1 past the 3:00 hard limit
+VOICE = "en-US-BrianMultilingualNeural"   # newer conversational model — the older
+                                          # en-IN neural voice read flat by comparison
+RATE = "-8%"                    # Brian reads briskly; slowed so each shot has room to
+                                # breathe. Still lands ~2:35, inside the 3:00 limit.
 
 # Each entry: (video, shot id, narration). Text is written for the ear, not the
 # eye — short clauses, no parentheses, numbers spelled where they would trip a
@@ -136,8 +138,27 @@ def duration(path: Path) -> float:
     return round(float(out.stdout.strip()), 2)
 
 
-async def synth(text: str, dest: Path) -> None:
-    await edge_tts.Communicate(text, VOICE, rate=RATE).save(str(dest))
+async def synth(text: str, dest: Path) -> Path:
+    """Write the audio and an SRT beside it.
+
+    edge-tts reports boundary events as it speaks, so captions carry the
+    synthesiser's own timings rather than an estimate from shot length — they
+    stay in step even where a sentence runs long.
+    """
+    comm = edge_tts.Communicate(text, VOICE, rate=RATE)
+    subs = edge_tts.SubMaker()
+    with open(dest, "wb") as fh:
+        async for chunk in comm.stream():
+            if chunk["type"] == "audio":
+                fh.write(chunk["data"])
+            elif chunk["type"] in ("SentenceBoundary", "WordBoundary"):
+                # this voice reports sentence boundaries, which is the right
+                # granularity for captions anyway — a cue per sentence rather
+                # than a word flickering at a time
+                subs.feed(chunk)
+    srt = dest.with_suffix(".srt")
+    srt.write_text(subs.get_srt(), encoding="utf-8")
+    return srt
 
 
 async def main() -> int:

@@ -1,0 +1,103 @@
+1
+00:00:00,050 --> 00:00:06,453
+SUTRA onboards the Government provided cameras automatically from the challenge portal's own catalogue.
+
+2
+00:00:06,453 --> 00:00:15,326
+Thirty live feeds across five departments, a mix of H two six four and H two six five, at different resolutions.
+
+3
+00:00:15,326 --> 00:00:21,508
+They are pulled over authenticated R T S P, with credentials injected at connection time.
+
+4
+00:00:21,508 --> 00:00:28,654
+The credentials are never written into the registry, never logged, and never stored with the camera record.
+
+5
+00:00:28,750 --> 00:00:31,485
+Live viewing of the Government feeds.
+
+6
+00:00:31,485 --> 00:00:39,026
+These are the portal's cameras — Junagadh, Gir Somnath, Ahmedabad — decoding right now on this machine.
+
+7
+00:00:39,026 --> 00:00:42,368
+We measured the portal before designing for it.
+
+8
+00:00:42,368 --> 00:00:49,524
+It rations delivery to about five megabits per second per client, whether you open ten connections or twenty.
+
+9
+00:00:49,524 --> 00:00:52,382
+That is three to four real time streams.
+
+10
+00:00:52,382 --> 00:01:00,559
+So the scheduler rotates all thirty cameras through the slots available, rather than opening thirty connections that would all starve.
+
+11
+00:01:00,650 --> 00:01:04,513
+Number plate recognition running on the Government feeds.
+
+12
+00:01:04,513 --> 00:01:13,928
+These are today's reads from the Junagadh and Gir Somnath cameras, each one with the camera it came from, a timestamp, and the confidence of the read.
+
+13
+00:01:13,928 --> 00:01:16,754
+That confidence column is deliberate.
+
+14
+00:01:16,754 --> 00:01:20,871
+These are plates fifty to ninety pixels tall on a live street.
+
+15
+00:01:20,871 --> 00:01:24,920
+Reads above about zero point nine five are reliable.
+
+16
+00:01:24,920 --> 00:01:27,638
+Below that, characters can be wrong.
+
+17
+00:01:27,638 --> 00:01:33,521
+Publishing the number without the confidence would invite you to treat every row as a fact.
+
+18
+00:01:33,630 --> 00:01:35,631
+Every read is evidenced.
+
+19
+00:01:35,631 --> 00:01:43,185
+This is the actual crop the recognition ran on, kept alongside the detection, so any read can be checked by a human.
+
+20
+00:01:43,185 --> 00:01:48,226
+That is the minimum bar for anything that might support an investigation.
+
+21
+00:01:48,340 --> 00:01:53,493
+And this is the required output report, straight from the Government feeds.
+
+22
+00:01:53,493 --> 00:02:04,961
+Eighty two plate reads over a two hour run, fifty one distinct registration numbers, each with U T C and I S T timestamps and a path to its evidence image.
+
+23
+00:02:05,070 --> 00:02:12,506
+Completing the Model One foundation: a layered coverage map by department, camera type and status.
+
+24
+00:02:12,506 --> 00:02:17,968
+District level gap analysis showing thin coverage and ageing infrastructure.
+
+25
+00:02:17,968 --> 00:02:25,155
+And a full metadata audit trail — every onboarding, export and watchlist change recorded against a user.
+
+26
+00:02:25,155 --> 00:02:30,644
+The hosted platform, the source code and this report are all linked in the submission.
