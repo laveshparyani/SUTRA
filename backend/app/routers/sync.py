@@ -94,15 +94,25 @@ class SyncPayload(BaseModel):
     alerts: list[AlertIn] = []
 
 
-def _store_evidence(db: Session, rel_path: str, b64: str | None) -> str:
+def _store_evidence(db: Session, rel_path: str, b64: str | None, staged: set[str]) -> str:
     """Persist an inlined thumbnail in the database.
 
     Deliberately not the filesystem: the central tier's disk is ephemeral, so
     a redeploy would silently turn every alert into a broken image.
+
+    `staged` carries the paths already added during this request. The session
+    runs with autoflush off, so a row added a moment ago is invisible to the
+    query below until something else happens to flush — which means one batch
+    could add the same path twice and violate Evidence.path's unique
+    constraint at commit. An alert and the detection it was raised from share
+    a snapshot, so that pairing is the normal case, not an edge case.
     """
     if not b64 or not rel_path:
         return rel_path or ""
+    if rel_path in staged:
+        return rel_path
     if db.query(Evidence.id).filter(Evidence.path == rel_path).first():
+        staged.add(rel_path)
         return rel_path
     try:
         blob = base64.b64decode(b64)
@@ -110,6 +120,7 @@ def _store_evidence(db: Session, rel_path: str, b64: str | None) -> str:
         log.warning("undecodable evidence for %s", rel_path)
         return ""
     db.add(Evidence(path=rel_path, content=blob, size_bytes=len(blob)))
+    staged.add(rel_path)
     return rel_path
 
 
@@ -117,6 +128,7 @@ def _store_evidence(db: Session, rel_path: str, b64: str | None) -> str:
 def push(payload: SyncPayload, db: Session = Depends(get_db)):
     """Idempotent upsert of edge metadata into the central store."""
     cam_ids: dict[str, int] = {}
+    staged_evidence: set[str] = set()
     cams_new = 0
     for c in payload.cameras:
         cam = db.query(Camera).filter(Camera.external_id == c.external_id).one_or_none()
@@ -160,7 +172,7 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
                 det_conf=d.det_conf,
                 bbox=d.bbox,
                 track_id=d.track_id,
-                snapshot_path=_store_evidence(db, d.snapshot_path, d.snapshot_b64),
+                snapshot_path=_store_evidence(db, d.snapshot_path, d.snapshot_b64, staged_evidence),
             )
         )
         dets_new += 1
@@ -204,7 +216,7 @@ def push(payload: SyncPayload, db: Session = Depends(get_db)):
             camera_id=cid,
             ts=a.ts,
             plate_text=plate_text,
-            snapshot_path=_store_evidence(db, a.snapshot_path, a.snapshot_b64),
+            snapshot_path=_store_evidence(db, a.snapshot_path, a.snapshot_b64, staged_evidence),
         )
         db.add(det)
         db.flush()
