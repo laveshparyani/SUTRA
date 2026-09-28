@@ -37,3 +37,7 @@ infra/tunnel/
 
 # Claude Code skills are per-developer tooling, not part of the submission
 .claude/skills/
+
+# submission imagery is part of the deliverable
+!submission/screenshots/*.png
+!submission/SUTRA_workflow_diagram.png
