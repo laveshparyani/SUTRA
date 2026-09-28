@@ -28,15 +28,23 @@ OVERLAY = (Path(__file__).resolve().parent / "walkthrough_overlay.js").read_text
 class Step:
     """One test case: its clock, its annotations and its verdict."""
 
-    def __init__(self, page, ref, title, seconds):
+    def __init__(self, page, ref, title, seconds, deadline):
         self.page, self.ref, self.title, self.budget = page, ref, title, seconds
         self.start = time.monotonic()
+        # The deadline is absolute, taken from the narration timeline, rather
+        # than "now plus my budget". Work that cannot be capped — a navigation,
+        # a click, the lightbox settling — pushes a step past its own slot, and
+        # against a relative clock every one of those overruns was added to the
+        # next step's start, so the picture drifted steadily behind the voice.
+        # Against an absolute one an overrun is absorbed by the padding of the
+        # step that follows, and the take stays in step with the narration.
+        self.deadline = deadline
         self.overlay()
         self.js(f"wt.badge({ref!r}, {title!r})")
 
     @property
     def left(self):
-        return max(0.0, self.budget - (time.monotonic() - self.start))
+        return max(0.0, self.deadline - time.monotonic())
 
     def overlay(self):
         """(Re)inject after any navigation — a page load wipes the layer."""
@@ -544,15 +552,22 @@ def main() -> int:
         ctx.set_default_timeout(7000)
         ctx.set_default_navigation_timeout(25000)
         page = ctx.new_page()
+        # Recording starts with the page, so the sign-in that follows lands in
+        # the take before the first narrated step. The encoder trims exactly
+        # this much off the front rather than anyone eyeballing it.
+        video_zero = time.monotonic()
         login(page, ADMIN, ADMIN_PW)
+        t0 = time.monotonic()
+        lead_in = t0 - video_zero
 
         for ref, title, _text, action in steps():
-            secs = plan[ref]["duration"]
+            slot = plan[ref]
+            secs = slot["duration"]
             try:                       # never start a step behind an overlay
                 close_lightbox(page)
             except Exception:
                 pass
-            st = Step(page, ref, title, secs)
+            st = Step(page, ref, title, secs, t0 + slot["start"] + slot["duration"])
             try:
                 verdict = ACTIONS[action](st)
                 st.verdict(True, verdict)
@@ -572,6 +587,11 @@ def main() -> int:
     report = outdir / "walkthrough_defects.json"
     report.write_text(json.dumps(defects, indent=2), encoding="utf-8")
     vids = sorted(outdir.glob("*.webm"), key=lambda f: f.stat().st_mtime)
+    (outdir / "take.json").write_text(
+        json.dumps({"lead_in": round(lead_in, 2),
+                    "video": vids[-1].name if vids else None}, indent=2),
+        encoding="utf-8")
+    print(f"lead-in {lead_in:.2f}s (trim this off the front when encoding)")
     total = sum(s["duration"] for s in timeline)
     print(f"\n{len(steps()) - len(defects)}/{len(steps())} steps passed, {len(defects)} issues")
     print(f"wall clock {time.monotonic()-began:.0f}s (narration {total:.0f}s)")

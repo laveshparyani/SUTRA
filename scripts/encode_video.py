@@ -4,7 +4,12 @@ The captions are burned rather than shipped as a sidecar: the submission is
 watched in whatever player the evaluator happens to open, and a separate .srt
 is only subtitles if that player goes looking for it.
 
-    python scripts/encode_video.py <take.webm> <narration.mp3> <captions.srt> <out.mp4>
+    python scripts/encode_video.py <take.webm> <narration.mp3> <captions.srt> <out.mp4> [trim]
+
+`trim` is the take's lead-in in seconds — recording starts with the page, so
+whatever happens before the first narrated step (the sign-in) sits at the front
+of the take and would otherwise hold the whole picture behind the voice. The
+walkthrough recorder measures it and writes it to take.json.
 
 ASS styling note: without PlayResX/PlayResY libass assumes a 384x288 reference
 and scales every size up to the real frame, which rendered the first attempt at
@@ -35,6 +40,7 @@ STYLE = ",".join([
 
 def main() -> int:
     take, audio, srt, out = (Path(a).resolve() for a in sys.argv[1:5])
+    trim = float(sys.argv[5]) if len(sys.argv) > 5 else 0.0
     out.parent.mkdir(parents=True, exist_ok=True)
 
     # Run from the subtitle's own directory and pass a bare filename: the
@@ -42,6 +48,10 @@ def main() -> int:
     # letter in the path needs escaping that varies by ffmpeg build.
     cmd = [
         "ffmpeg", "-y",
+        # -ss ahead of -i seeks the input, so the trimmed frames are dropped
+        # before the subtitle filter counts timestamps and the captions stay
+        # aligned to the audio rather than to the untrimmed take.
+        *(["-ss", f"{trim:.3f}"] if trim else []),
         "-i", str(take),
         "-i", str(audio),
         "-vf", f"subtitles={srt.name}:force_style='{STYLE}'",

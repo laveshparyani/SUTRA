@@ -8,6 +8,9 @@ Hosted platform: https://sutra-central.onrender.com
 |---|---|
 | `SUTRA_Solution_Presentation.pptx` | Solution presentation (deliverable 1) |
 | `SUTRA_HLD.pdf` | High-Level Design / technical proposal (deliverable 2) |
+| `SUTRA_own_feed_demo_captioned.mp4` | Demo video 1 — own feed, narrated, captions burned in (2:36) |
+| `SUTRA_government_feed_demo_captioned.mp4` | Demo video 2 — the challenge portal's cameras, narrated (2:31) |
+| `SUTRA_verification_walkthrough.mp4` | **Verification walkthrough** — every acceptance test in `docs/TESTING.md` run against the live system, annotated with its test reference and verdict (6:04) |
 | `sutra_gov_feed_output_report_2026-09-26.csv` | **Government-feed output report** — 82 plate reads with timestamps |
 | `evidence_2026-09-26/` | The 82 evidence crops the report references, one per row |
 | `sutra_camera_registry.csv` | Registry export — all onboarded cameras and their metadata |
@@ -81,6 +84,25 @@ GET /api/insight/report?since=2026-09-26T00:00:00Z&camera_id=<id>
 Returns CSV directly. Omit `camera_id` for every camera; the government-only
 report here is the per-camera output for the portal cameras, merged and
 renumbered by timestamp.
+
+## The verification walkthrough
+
+`SUTRA_verification_walkthrough.mp4` is not a highlights reel. It runs all 31
+acceptance tests from `docs/TESTING.md` in order against the running platform.
+Each step names the requirement it proves, rings the element under test, and
+states the result on screen as it happens.
+
+It is produced by `scripts/record_walkthrough.py`, which drives the browser and
+records from inside it, so what the video shows is what the test actually did.
+A failing check is marked on screen as an issue and written to a defect report
+beside the video rather than stopping the take. The take used here reports
+**31 of 31 passed, 0 issues**, and its defect report is empty.
+
+The run that preceded it did not: it found a crash in the detections view,
+where switching back to the Vehicles tab rendered the new layout against the
+previous tab's payload and took the whole page down. That is fixed, and the
+walkthrough is the reason it was found — it drives the tabs the way an operator
+would, which neither demo video did.
 
 ## A note on cross-camera tracking
 

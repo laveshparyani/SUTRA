@@ -1,0 +1,211 @@
+1
+00:00:00,050 --> 00:00:08,070
+This is a verification walkthrough of SUTRA, the platform submitted for the Gujarat Police CCTV Integration Challenge.
+
+2
+00:00:08,070 --> 00:00:15,964
+Rather than a highlights reel, this runs the acceptance tests in the submitted test plan, one at a time, against the live system.
+
+3
+00:00:15,964 --> 00:00:22,160
+Each check names the requirement it proves, and the result is shown on screen as it happens.
+
+4
+00:00:22,270 --> 00:00:28,198
+Model One is the mandatory foundation: a central registry of every camera.
+
+5
+00:00:28,198 --> 00:00:38,524
+The registry holds thirty eight cameras across seven departments, each with its location, district, protocol and live health — not placeholders.
+
+6
+00:00:38,640 --> 00:00:40,872
+Onboarding is automatic.
+
+7
+00:00:40,872 --> 00:00:50,913
+Discover reads the challenge portal's own catalogue and updates all thirty government cameras in place, keeping their history rather than creating duplicates.
+
+8
+00:00:51,020 --> 00:00:58,836
+The registry is searchable and filterable by department, so an operator can narrow eighty thousand cameras to the ones they need.
+
+9
+00:00:58,940 --> 00:01:07,952
+The whole registry exports to CSV — one row per camera with its full metadata, which is what a department needs for its own asset records.
+
+10
+00:01:08,060 --> 00:01:11,583
+The Atlas map is the GIS half of Model One.
+
+11
+00:01:11,583 --> 00:01:22,466
+It layers by department, camera type and status, with an optional coverage radius coloured by health, so a dead camera's zone reads as a gap rather than as cover.
+
+12
+00:01:22,580 --> 00:01:25,369
+Camera health is reported honestly.
+
+13
+00:01:25,369 --> 00:01:33,005
+Tiles read live, stalled, connecting, unreachable, queued or not pooled — and a tile that is not streaming says why.
+
+14
+00:01:33,005 --> 00:01:36,085
+A frozen frame is never labelled live.
+
+15
+00:01:36,140 --> 00:01:45,492
+Gap analysis reports coverage by district, flagging thin coverage and ageing infrastructure — the planning output Model One exists to produce.
+
+16
+00:01:45,600 --> 00:01:49,041
+Every action against the registry is audited.
+
+17
+00:01:49,041 --> 00:01:55,767
+The discovery and export just performed appear here, attributed to the signed-in user with a timestamp.
+
+18
+00:01:55,870 --> 00:01:59,271
+Model Three federates heterogeneous sources.
+
+19
+00:01:59,271 --> 00:02:09,936
+Government cameras arrive over authenticated R T S P while recorded file sources run alongside them, both reaching the same pipeline through one adapter contract.
+
+20
+00:02:10,050 --> 00:02:17,065
+The portal authenticates every connection, and the stored source URL carries no email and no password.
+
+21
+00:02:17,065 --> 00:02:23,804
+Credentials are injected at connection time and never written to the registry, the export, or the logs.
+
+22
+00:02:23,920 --> 00:02:36,709
+Detections are correlated against a government vehicle database through a VAHAN shaped connector — make, model, class, registering office and insurance status, with the owner name masked.
+
+23
+00:02:36,810 --> 00:02:41,529
+Number plate recognition runs continuously on the government feeds.
+
+24
+00:02:41,529 --> 00:02:47,439
+These reads carry the camera they came from, a timestamp, and the confidence of each read.
+
+25
+00:02:47,540 --> 00:02:52,177
+The same vehicle read many times is one vehicle, not many rows.
+
+26
+00:02:52,177 --> 00:02:59,555
+Raw reads collapse into sightings, and sightings into vehicles, so an operator sees vehicles rather than noise.
+
+27
+00:02:59,660 --> 00:03:05,398
+Every read keeps the crop the recognition ran on, so any plate can be checked by a human.
+
+28
+00:03:05,398 --> 00:03:10,112
+That is the minimum bar for anything supporting an investigation.
+
+29
+00:03:10,220 --> 00:03:13,227
+Confidence is published with every read.
+
+30
+00:03:13,227 --> 00:03:17,343
+These are plates fifty to ninety pixels tall on a live street.
+
+31
+00:03:17,343 --> 00:03:28,349
+Reads above about zero point nine five are reliable; below that characters can be wrong, and the column lets a reader apply their own threshold instead of trusting all of them equally.
+
+32
+00:03:28,460 --> 00:03:37,798
+Beyond plates, every camera gets person and vehicle counts from an object detection sidecar — all on C P U, with no G P U anywhere in this deployment.
+
+33
+00:03:37,920 --> 00:03:48,590
+The watchlist holds stolen and suspect vehicles, each with an F I R reference and a priority, mapping one to one onto e-Guj-Cop records in production.
+
+34
+00:03:48,700 --> 00:03:55,416
+Adding a vehicle takes effect immediately and is recorded in the audit trail against the user who added it.
+
+35
+00:03:55,520 --> 00:04:04,654
+When a read matches the watchlist, an alert fires automatically carrying the camera, the location, the time, and an annotated evidence frame.
+
+36
+00:04:04,760 --> 00:04:10,049
+A watchlisted vehicle parked in one camera's view would otherwise fire endlessly.
+
+37
+00:04:10,049 --> 00:04:17,277
+Alerts group into episodes — one row per vehicle per camera, with a hit count and how many remain unacknowledged.
+
+38
+00:04:17,379 --> 00:04:25,059
+Where a match was fuzzy rather than exact, it is labelled a probable match and shows the characters the camera actually read.
+
+39
+00:04:25,059 --> 00:04:30,915
+An operator is never handed a one character inference as a confirmed identification.
+
+40
+00:04:31,040 --> 00:04:36,220
+Alerts are acknowledged by an operator, and the acknowledgement is audited.
+
+41
+00:04:36,320 --> 00:04:38,892
+This is the evaluation scenario.
+
+42
+00:04:38,892 --> 00:04:45,631
+Given a registration number, the platform returns that vehicle's history across the integrated network.
+
+43
+00:04:45,750 --> 00:04:56,868
+The result is a timestamped, location-wise movement history: each sighting with its camera, district, time window, read confidence and evidence image.
+
+44
+00:04:56,980 --> 00:05:00,829
+Sightings are plotted on the GIS map in sequence.
+
+45
+00:05:00,829 --> 00:05:12,527
+Where a vehicle has been seen at one location only, the platform says so plainly rather than leaving an unexplained point — a route line is drawn as soon as a second camera reads the same plate.
+
+46
+00:05:12,630 --> 00:05:20,745
+A registration number the network has never seen returns a clear not-sighted result, not an error and not an empty screen.
+
+47
+00:05:20,860 --> 00:05:33,106
+The required output report exports directly from the platform: detected plates with their camera, location, confidence, and both U T C and I S T timestamps.
+
+48
+00:05:33,220 --> 00:05:36,021
+Security is enforced server side.
+
+49
+00:05:36,021 --> 00:05:41,485
+Requesting camera data without a session returns unauthorised rather than data.
+
+50
+00:05:41,600 --> 00:05:45,055
+Roles are enforced, not merely displayed.
+
+51
+00:05:45,055 --> 00:05:52,473
+Signed in as a read-only viewer, the actions that change state are gone from the interface and refused by the server.
+
+52
+00:05:52,590 --> 00:05:57,458
+That is the acceptance test plan run end to end against the live platform.
+
+53
+00:05:57,458 --> 00:06:03,694
+The hosted instance, the source code, the output report and this test plan are all linked in the submission.
