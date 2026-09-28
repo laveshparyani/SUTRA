@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, fmtDayTime, fmtTime } from "../api";
+import { api, fmtDayTime, fmtTime, mediaSrc } from "../api";
 import { useAuth } from "../auth.jsx";
 import { PlateChip } from "../components/PlateChip.jsx";
 import { useAlerts } from "../ws.jsx";
@@ -156,7 +156,7 @@ export function Alerts() {
                 <tr key={`${ep.plate}-${ep.camera_id}-${ep.latest_alert_id}`}>
                   <td>
                     {ep.snapshot && (
-                      <img src={ep.snapshot} alt={`Evidence for ${ep.plate}`} className="evidence-thumb"
+                      <img src={mediaSrc(ep.snapshot)} alt={`Evidence for ${ep.plate}`} className="evidence-thumb"
                         onClick={() => setZoom(ep.snapshot)} />
                     )}
                   </td>

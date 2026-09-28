@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, downloadFile, fmtTime } from "../api";
+import { api, downloadFile, fmtTime, mediaSrc } from "../api";
 import { PlateChip } from "../components/PlateChip.jsx";
 
 const dur = (a, b) => {
@@ -168,7 +168,7 @@ export function Detections() {
               <tr key={v.plate} className="sighting-row">
                 <td>
                   {v.snapshot ? (
-                    <img className="evidence-thumb" src={v.snapshot} loading="lazy"
+                    <img className="evidence-thumb" src={mediaSrc(v.snapshot)} loading="lazy"
                       alt={`Plate crop for ${v.plate}`} onClick={() => setZoom(v.snapshot)} />
                   ) : <div className="evidence-none">NONE</div>}
                 </td>

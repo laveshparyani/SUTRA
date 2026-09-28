@@ -94,6 +94,16 @@ export async function downloadFile(url, filename) {
 /** Day + time without seconds, for spans where the exact second is noise.
  *  A formatter rather than a substring of fmtTime(): slicing that string cuts
  *  a two-digit minute in half ("13:5") whenever the locale shifts by a char. */
+// Evidence URLs reach the browser over the edge->central sync channel, so they
+// are data from another node rather than something this app composed. Only a
+// same-origin /data/ image path is handed to an <img src>: anything else —
+// another origin, a javascript: or data: URL, a stray path — renders nothing
+// instead of becoming a live URL in the page.
+export function mediaSrc(path) {
+  if (typeof path !== "string" || path.includes("..")) return null;
+  return /^\/data\/[\w./-]+\.(jpe?g|png)$/i.test(path) ? path : null;
+}
+
 export function fmtDayTime(ts) {
   if (!ts) return "—";
   const d = new Date(ts.endsWith("Z") || ts.includes("+") ? ts : ts + "Z");
