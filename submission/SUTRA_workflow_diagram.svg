@@ -1,170 +1,210 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="Segoe UI, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="Segoe UI, Inter, Arial, sans-serif">
+  <!--
+    SUTRA workflow & integration diagram.
+    Palette and type follow the SUTRA Command control-room UI and the solution
+    deck: deep navy ink, amber accent, ice body text, muted captions.
+  -->
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#0b2447"/>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8A9BB0"/>
     </marker>
-    <marker id="arrowAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M0,0 L10,5 L0,10 z" fill="#c2410c"/>
+    <marker id="arrAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#F0A428"/>
     </marker>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E1A2B"/>
+      <stop offset="1" stop-color="#0B1522"/>
+    </linearGradient>
+    <style>
+      .h1 { font-size: 30px; font-weight: 700; fill: #FFFFFF; letter-spacing: .2px; }
+      .sub { font-size: 14px; fill: #8A9BB0; }
+      .tier { font-size: 12px; font-weight: 700; fill: #F0A428; letter-spacing: 2px; }
+      .tierTitle { font-size: 19px; font-weight: 700; fill: #FFFFFF; }
+      .tierNote { font-size: 12.5px; fill: #8A9BB0; }
+      .cardTitle { font-size: 14px; font-weight: 700; fill: #FFFFFF; }
+      .cardTag { font-size: 10.5px; font-weight: 700; fill: #F0A428; letter-spacing: 1.2px; }
+      .body { font-size: 12.5px; fill: #CBD8E8; }
+      .muted { font-size: 12px; fill: #8A9BB0; }
+      .lane { fill: #132339; stroke: #243240; stroke-width: 1; }
+      .card { fill: #172A42; stroke: #33465A; stroke-width: 1; }
+      .cardWarm { fill: #2A2216; stroke: #7A5A1C; stroke-width: 1; }
+      .stepNum { font-size: 22px; font-weight: 700; fill: #F0A428; }
+      .stepTitle { font-size: 14px; font-weight: 700; fill: #FFFFFF; }
+      .stepBody { font-size: 12px; fill: #CBD8E8; }
+      .flowLabel { font-size: 11.5px; font-weight: 700; fill: #F0A428; }
+      .foot { font-size: 12px; fill: #8A9BB0; }
+    </style>
   </defs>
-  <rect width="1600" height="1000" fill="#ffffff"/>
 
-  <!-- title -->
-  <text x="40" y="52" font-size="30" font-weight="700" fill="#0b2447">SUTRA — Workflow &amp; Integration Diagram</text>
-  <text x="40" y="82" font-size="16" fill="#475569">Statewide Unified Tracking, Registry &amp; Analytics · Hybrid Model 1 (Registry &amp; GIS) + Model 3 (Federation &amp; Middleware) · Gujarat Police CCTV Integration Hackathon 2026</text>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1600" height="6" fill="#F0A428"/>
 
-  <!-- ===== SOURCES (left) ===== -->
-  <rect x="40" y="130" width="330" height="520" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
-  <text x="60" y="162" font-size="18" font-weight="700" fill="#0b2447">Heterogeneous camera sources</text>
-  <text x="60" y="184" font-size="13" fill="#475569">26 departments · analog + IP · many VMS vendors</text>
+  <!-- ================= HEADER ================= -->
+  <text x="48" y="58" class="h1">SUTRA — Workflow &amp; Integration Diagram</text>
+  <text x="48" y="84" class="sub">Statewide Unified Tracking, Registry &amp; Analytics  ·  Hybrid: Model 1 registry &amp; GIS foundation on a Model 3 federation layer  ·  Gujarat Police CCTV Integration Hackathon 2026</text>
+  <line x1="48" y1="104" x2="1552" y2="104" stroke="#243240"/>
 
-  <g font-size="13" fill="#0f172a">
-    <rect x="60" y="205" width="290" height="62" rx="8" fill="#ffffff" stroke="#94a3b8"/>
-    <text x="74" y="229" font-weight="600">Challenge portal (Sentinel Camera Grid)</text>
-    <text x="74" y="249" fill="#475569">30 cameras · credentialed RTSP (H.264/H.265) · HLS fallback</text>
+  <!-- ================= TIER 1: SOURCES ================= -->
+  <rect x="48" y="128" width="380" height="500" rx="12" class="lane"/>
+  <text x="70" y="158" class="tier">TIER 1 · SOURCES</text>
+  <text x="70" y="186" class="tierTitle">Heterogeneous cameras</text>
+  <text x="70" y="206" class="tierNote">26 departments · analog and IP · many VMS vendors · owners stay owners</text>
 
-    <rect x="60" y="280" width="290" height="62" rx="8" fill="#ffffff" stroke="#94a3b8"/>
-    <text x="74" y="304" font-weight="600">Departmental VMS / NVR</text>
-    <text x="74" y="324" fill="#475569">RTSP · ONVIF · vendor SDK (adapter modules)</text>
+  <rect x="70" y="226" width="336" height="76" rx="8" class="card"/>
+  <text x="86" y="250" class="cardTitle">Challenge portal — Sentinel Camera Grid</text>
+  <text x="86" y="270" class="body">30 live cameras · credentialed RTSP, H.264 + H.265</text>
+  <text x="86" y="288" class="body">cookie-authenticated HLS as fallback</text>
 
-    <rect x="60" y="355" width="290" height="62" rx="8" fill="#ffffff" stroke="#94a3b8"/>
-    <text x="74" y="379" font-weight="600">Private / society / commercial cameras</text>
-    <text x="74" y="399" fill="#475569">RTSP or HTTP, onboarded via API, CSV or UI</text>
+  <rect x="70" y="314" width="336" height="76" rx="8" class="card"/>
+  <text x="86" y="338" class="cardTitle">Departmental VMS / NVR</text>
+  <text x="86" y="358" class="body">RTSP · ONVIF Profile S/T · vendor SDK</text>
+  <text x="86" y="376" class="body">each one an adapter module, no core change</text>
 
-    <rect x="60" y="430" width="290" height="62" rx="8" fill="#ffffff" stroke="#94a3b8"/>
-    <text x="74" y="454" font-weight="600">Recorded footage</text>
-    <text x="74" y="474" fill="#475569">file sources for investigation and replay</text>
-  </g>
-  <text x="60" y="530" font-size="13" fill="#475569">Video never leaves the edge. Only metadata,</text>
-  <text x="60" y="550" font-size="13" fill="#475569">plate reads and evidence crops travel upward.</text>
-  <text x="60" y="590" font-size="13" fill="#475569">Source credentials live only in the edge</text>
-  <text x="60" y="610" font-size="13" fill="#475569">node's environment; the registry stores</text>
-  <text x="60" y="630" font-size="13" fill="#475569">credential-free URLs.</text>
+  <rect x="70" y="402" width="336" height="76" rx="8" class="card"/>
+  <text x="86" y="426" class="cardTitle">Private, society and commercial cameras</text>
+  <text x="86" y="446" class="body">RTSP or HTTP · onboarded via API, CSV or UI</text>
+  <text x="86" y="464" class="body">same registry, same health model</text>
+
+  <rect x="70" y="490" width="336" height="58" rx="8" class="card"/>
+  <text x="86" y="514" class="cardTitle">Recorded footage</text>
+  <text x="86" y="534" class="body">file sources for investigation and replay</text>
+
+  <text x="70" y="580" class="muted">Source credentials stay in the edge node's environment.</text>
+  <text x="70" y="598" class="muted">The registry only ever stores credential-free URLs.</text>
 
   <!-- arrows sources -> edge -->
-  <line x1="370" y1="236" x2="430" y2="236" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="370" y1="311" x2="430" y2="311" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="370" y1="386" x2="430" y2="386" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="370" y1="461" x2="430" y2="461" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-
-  <!-- ===== EDGE NODE (middle) ===== -->
-  <rect x="430" y="130" width="520" height="520" rx="14" fill="#eef4ff" stroke="#93b4e6"/>
-  <text x="450" y="162" font-size="18" font-weight="700" fill="#0b2447">Edge node — ingest + inference (per district / department)</text>
-  <text x="450" y="184" font-size="13" fill="#475569">Commodity CPU server · no GPU · FFmpeg + ONNX Runtime</text>
-
-  <g font-size="13" fill="#0f172a">
-    <rect x="450" y="205" width="480" height="92" rx="8" fill="#ffffff" stroke="#5b8fb9"/>
-    <text x="464" y="229" font-weight="700" fill="#1d4ed8">SUTRA Bridge — source adapters &amp; scheduler</text>
-    <text x="464" y="250" fill="#475569">One adapter contract: discover · probe · open_stream · health</text>
-    <text x="464" y="268" fill="#475569">Adaptive ingest scheduler: concurrency budget, dwell rotation, pinning,</text>
-    <text x="464" y="286" fill="#475569">alert-boost of the hit camera and its neighbours · honest per-camera health</text>
-
-    <rect x="450" y="312" width="480" height="92" rx="8" fill="#ffffff" stroke="#5b8fb9"/>
-    <text x="464" y="336" font-weight="700" fill="#1d4ed8">SUTRA Insight — AI analytics</text>
-    <text x="464" y="357" fill="#475569">ANPR: YOLOv9-t plate detection → CCT OCR → temporal voting → Indian-plate</text>
-    <text x="464" y="375" fill="#475569">normalisation and state-code repair · 30–75 ms/frame on CPU</text>
-    <text x="464" y="393" fill="#475569">Scene analytics: YOLOX-nano person / vehicle counts · evidence crop per read</text>
-
-    <rect x="450" y="419" width="480" height="92" rx="8" fill="#ffffff" stroke="#5b8fb9"/>
-    <text x="464" y="443" font-weight="700" fill="#1d4ed8">SUTRA Watch — matching &amp; alerting</text>
-    <text x="464" y="464" fill="#475569">Every read cross-referenced against the watchlist: exact match, or fuzzy</text>
-    <text x="464" y="482" fill="#475569">(confusion-fold, edit distance 1) labelled "probable" with raw characters shown</text>
-    <text x="464" y="500" fill="#475569">Alert episodes with cooldown · annotated evidence frame · acknowledgement</text>
+  <g stroke="#8A9BB0" stroke-width="2" marker-end="url(#arr)">
+    <line x1="428" y1="264" x2="486" y2="264"/>
+    <line x1="428" y1="352" x2="486" y2="352"/>
+    <line x1="428" y1="440" x2="486" y2="440"/>
+    <line x1="428" y1="519" x2="486" y2="519"/>
   </g>
+  <text x="432" y="252" class="flowLabel">video</text>
 
-  <rect x="450" y="530" width="480" height="96" rx="8" fill="#fff7ed" stroke="#fdba74"/>
-  <text x="464" y="554" font-size="13" font-weight="700" fill="#c2410c">Edge → central sync (every 30 s, resumable)</text>
-  <text x="464" y="575" font-size="13" fill="#7c2d12">Cameras, detections, alerts and evidence crops only — never video.</text>
-  <text x="464" y="593" font-size="13" fill="#7c2d12">Shared-secret channel, cursor survives restarts, duplicates collapsed.</text>
-  <text x="464" y="611" font-size="13" fill="#7c2d12">Bandwidth scales with events, not with streams → viable at 80,000 cameras.</text>
+  <!-- ================= TIER 2: EDGE ================= -->
+  <rect x="488" y="128" width="536" height="500" rx="12" class="lane"/>
+  <text x="510" y="158" class="tier">TIER 2 · EDGE NODE</text>
+  <text x="510" y="186" class="tierTitle">Ingest and inference, next to the cameras</text>
+  <text x="510" y="206" class="tierNote">Commodity CPU server per district or department · FFmpeg + ONNX Runtime · no GPU</text>
+
+  <rect x="510" y="226" width="492" height="98" rx="8" class="card"/>
+  <text x="526" y="246" class="cardTag">SUTRA BRIDGE</text>
+  <text x="526" y="266" class="cardTitle">Source adapters and adaptive ingest scheduler</text>
+  <text x="526" y="286" class="body">One adapter contract: discover · probe · open stream · health</text>
+  <text x="526" y="304" class="body">Concurrency budget, dwell rotation, operator pinning, alert-boost of the</text>
+  <text x="526" y="320" class="body">hit camera and its neighbours · health reported honestly per camera</text>
+
+  <rect x="510" y="336" width="492" height="98" rx="8" class="card"/>
+  <text x="526" y="356" class="cardTag">SUTRA INSIGHT</text>
+  <text x="526" y="376" class="cardTitle">AI video analytics</text>
+  <text x="526" y="396" class="body">ANPR: YOLOv9-t plate detection → CCT-S OCR → temporal voting →</text>
+  <text x="526" y="414" class="body">Indian-plate normalisation and state-code repair · 30–75 ms per frame</text>
+  <text x="526" y="430" class="body">Scene analytics: YOLOX-nano person and vehicle counts · evidence crop per read</text>
+
+  <rect x="510" y="446" width="492" height="98" rx="8" class="card"/>
+  <text x="526" y="466" class="cardTag">SUTRA WATCH</text>
+  <text x="526" y="486" class="cardTitle">Watchlist matching and real-time alerting</text>
+  <text x="526" y="506" class="body">Every read is cross-referenced: exact match, or fuzzy (confusion-fold,</text>
+  <text x="526" y="524" class="body">edit distance 1) labelled "probable" with the raw characters shown</text>
+  <text x="526" y="540" class="body">Alert episodes with cooldown · annotated evidence frame · acknowledgement</text>
+
+  <rect x="510" y="556" width="492" height="56" rx="8" class="cardWarm"/>
+  <text x="526" y="578" class="cardTitle">Edge → central sync, every 30 s, resumable</text>
+  <text x="526" y="598" class="body">Metadata, plate reads, alerts and evidence crops only. Video never leaves the edge.</text>
 
   <!-- arrow edge -> central -->
-  <line x1="950" y1="390" x2="1030" y2="390" stroke="#c2410c" stroke-width="3" marker-end="url(#arrowAmber)"/>
-  <text x="962" y="378" font-size="12" fill="#c2410c" font-weight="600">metadata</text>
+  <line x1="1024" y1="378" x2="1094" y2="378" stroke="#F0A428" stroke-width="3" marker-end="url(#arrAmber)"/>
+  <text x="1024" y="366" class="flowLabel">metadata</text>
 
-  <!-- ===== CENTRAL TIER (right) ===== -->
-  <rect x="1030" y="130" width="530" height="520" rx="14" fill="#ecfdf5" stroke="#6ee7b7"/>
-  <text x="1050" y="162" font-size="18" font-weight="700" fill="#0b2447">Central tier — command centre (hosted, 102 MB)</text>
-  <text x="1050" y="184" font-size="13" fill="#475569">No video decode · registry, alerts, trace, evidence, reports · PostgreSQL</text>
+  <!-- ================= TIER 3: CENTRAL ================= -->
+  <rect x="1096" y="128" width="456" height="500" rx="12" class="lane"/>
+  <text x="1118" y="158" class="tier">TIER 3 · CENTRAL</text>
+  <text x="1118" y="186" class="tierTitle">Command centre, hosted</text>
+  <text x="1118" y="206" class="tierNote">Registry, alerts, trace, evidence, reports · PostgreSQL · 102 MB, no video</text>
 
-  <g font-size="13" fill="#0f172a">
-    <rect x="1050" y="205" width="490" height="108" rx="8" fill="#ffffff" stroke="#34d399"/>
-    <text x="1064" y="229" font-weight="700" fill="#047857">SUTRA Atlas — Model 1 registry &amp; GIS foundation (mandatory)</text>
-    <text x="1064" y="250" fill="#475569">Camera registry: location, department, type, ownership, connectivity,</text>
-    <text x="1064" y="268" fill="#475569">storage, retention, install date · manual / API / bulk-CSV / auto-discovery</text>
-    <text x="1064" y="286" fill="#475569">GIS map layered by department, type, status, live health · gap &amp; ageing</text>
-    <text x="1064" y="304" fill="#475569">analysis · role-based search, CSV export · full metadata audit trail</text>
+  <rect x="1118" y="226" width="412" height="112" rx="8" class="card"/>
+  <text x="1134" y="246" class="cardTag">SUTRA ATLAS · MODEL 1 (MANDATORY)</text>
+  <text x="1134" y="266" class="cardTitle">Registry and GIS foundation</text>
+  <text x="1134" y="286" class="body">Location, department, type, ownership, connectivity,</text>
+  <text x="1134" y="302" class="body">storage, retention, install date · manual / API / CSV / discovery</text>
+  <text x="1134" y="318" class="body">Layered GIS map with live health · gap and ageing analysis</text>
+  <text x="1134" y="334" class="body">Role-based search, CSV export, full metadata audit trail</text>
 
-    <rect x="1050" y="328" width="490" height="108" rx="8" fill="#ffffff" stroke="#34d399"/>
-    <text x="1064" y="352" font-weight="700" fill="#047857">SUTRA Command — control-room UI (React + Leaflet)</text>
-    <text x="1064" y="373" fill="#475569">Video wall (relayed once per camera, never fanned out to sources)</text>
-    <text x="1064" y="391" fill="#475569">Real-time alert centre with evidence · Vehicle Trace: timestamped,</text>
-    <text x="1064" y="409" fill="#475569">location-wise movement history drawn on the GIS map · detections</text>
-    <text x="1064" y="427" fill="#475569">browser · watchlist manager · output report export (UTC + IST)</text>
+  <rect x="1118" y="350" width="412" height="112" rx="8" class="card"/>
+  <text x="1134" y="370" class="cardTag">SUTRA COMMAND</text>
+  <text x="1134" y="390" class="cardTitle">Control-room UI (React + Leaflet)</text>
+  <text x="1134" y="410" class="body">Video wall relayed once per camera, never fanned out</text>
+  <text x="1134" y="426" class="body">Real-time alert centre with evidence · watchlist manager</text>
+  <text x="1134" y="442" class="body">Vehicle Trace: timestamped movement history on the map</text>
+  <text x="1134" y="458" class="body">Detections browser · output report export (UTC + IST)</text>
 
-    <rect x="1050" y="451" width="490" height="90" rx="8" fill="#ffffff" stroke="#34d399"/>
-    <text x="1064" y="475" font-weight="700" fill="#047857">Government database connectors (integration-ready)</text>
-    <text x="1064" y="496" fill="#475569">Connector interface with a VAHAN-shaped representative dataset today;</text>
-    <text x="1064" y="514" fill="#475569">VAHAN · SARTHI · eGujCop (CCTNS) · AFIS / NAFIS are connector swaps</text>
-    <text x="1064" y="532" fill="#475569">Alerts enriched with vehicle details; owner identity masked by role</text>
+  <rect x="1118" y="474" width="412" height="66" rx="8" class="card"/>
+  <text x="1134" y="494" class="cardTag">GOVERNMENT DATABASE CONNECTORS</text>
+  <text x="1134" y="514" class="body">VAHAN-shaped connector live today · SARTHI, eGujCop (CCTNS),</text>
+  <text x="1134" y="530" class="body">AFIS / NAFIS are connector swaps · owner identity masked by role</text>
+
+  <rect x="1118" y="552" width="412" height="60" rx="8" class="card"/>
+  <text x="1134" y="572" class="cardTag">SECURITY AND AUDITABILITY</text>
+  <text x="1134" y="590" class="body">JWT + department-scoped RBAC · HttpOnly media tokens · login rate limit</text>
+  <text x="1134" y="604" class="body">authenticated evidence store · audit log · CI security scans</text>
+
+  <!-- ================= WORKFLOW ================= -->
+  <text x="48" y="676" class="tier">OPERATIONAL WORKFLOW</text>
+  <text x="48" y="702" class="tierTitle">From onboarding a camera to tracing a vehicle</text>
+
+  <g>
+    <rect x="48" y="724" width="278" height="128" rx="10" class="card"/>
+    <text x="66" y="756" class="stepNum">01</text>
+    <text x="104" y="756" class="stepTitle">Onboard</text>
+    <text x="66" y="782" class="stepBody">Discover the portal catalogue, import CSV,</text>
+    <text x="66" y="800" class="stepBody">call the API or add by hand. Every camera</text>
+    <text x="66" y="818" class="stepBody">gets a registry row, coordinates, department</text>
+    <text x="66" y="836" class="stepBody">and a live health state.</text>
+
+    <rect x="354" y="724" width="278" height="128" rx="10" class="card"/>
+    <text x="372" y="756" class="stepNum">02</text>
+    <text x="410" y="756" class="stepTitle">Ingest</text>
+    <text x="372" y="782" class="stepBody">The scheduler opens streams within the</text>
+    <text x="372" y="800" class="stepBody">budget, RTSP over TCP with credentials</text>
+    <text x="372" y="818" class="stepBody">injected at open, and samples about one</text>
+    <text x="372" y="836" class="stepBody">frame per second per camera.</text>
+
+    <rect x="660" y="724" width="278" height="128" rx="10" class="card"/>
+    <text x="678" y="756" class="stepNum">03</text>
+    <text x="716" y="756" class="stepTitle">Analyse</text>
+    <text x="678" y="782" class="stepBody">Plates are detected, read and voted across</text>
+    <text x="678" y="800" class="stepBody">frames; scenes are counted for people and</text>
+    <text x="678" y="818" class="stepBody">vehicles. Each read keeps its evidence crop</text>
+    <text x="678" y="836" class="stepBody">and its confidence.</text>
+
+    <rect x="966" y="724" width="278" height="128" rx="10" class="card"/>
+    <text x="984" y="756" class="stepNum">04</text>
+    <text x="1022" y="756" class="stepTitle">Correlate and alert</text>
+    <text x="984" y="782" class="stepBody">Reads are matched to the watchlist and</text>
+    <text x="984" y="800" class="stepBody">enriched from the vehicle database. A hit</text>
+    <text x="984" y="818" class="stepBody">raises a real-time alert and boosts the</text>
+    <text x="984" y="836" class="stepBody">neighbouring cameras.</text>
+
+    <rect x="1272" y="724" width="280" height="128" rx="10" fill="#F0A428"/>
+    <text x="1290" y="756" font-size="22" font-weight="700" fill="#0E1A2B">05</text>
+    <text x="1328" y="756" font-size="14" font-weight="700" fill="#0E1A2B">Trace and report</text>
+    <text x="1290" y="782" font-size="12" fill="#0E1A2B">Given a registration number, SUTRA</text>
+    <text x="1290" y="800" font-size="12" fill="#0E1A2B">reconstructs the route with timestamps on</text>
+    <text x="1290" y="818" font-size="12" fill="#0E1A2B">the GIS map and exports the output report</text>
+    <text x="1290" y="836" font-size="12" fill="#0E1A2B">with UTC and IST times.</text>
+  </g>
+  <g stroke="#8A9BB0" stroke-width="2" marker-end="url(#arr)">
+    <line x1="326" y1="788" x2="352" y2="788"/>
+    <line x1="632" y1="788" x2="658" y2="788"/>
+    <line x1="938" y1="788" x2="964" y2="788"/>
+    <line x1="1244" y1="788" x2="1270" y2="788"/>
   </g>
 
-  <rect x="1050" y="556" width="490" height="70" rx="8" fill="#fef2f2" stroke="#fca5a5"/>
-  <text x="1064" y="580" font-size="13" font-weight="700" fill="#b91c1c">Security &amp; auditability</text>
-  <text x="1064" y="600" font-size="13" fill="#7f1d1d">JWT + department-scoped RBAC (admin / operator / viewer) · HttpOnly media</text>
-  <text x="1064" y="618" font-size="13" fill="#7f1d1d">tokens · login rate limiting · authenticated evidence store · audit log · CI security scans</text>
+  <!-- ================= SCALE NOTE + FOOTER ================= -->
+  <rect x="48" y="876" width="1504" height="52" rx="8" class="cardWarm"/>
+  <text x="66" y="898" class="cardTitle">Why it scales to ~80,000 cameras</text>
+  <text x="66" y="917" class="body">Video stays at the edge and only events travel upward, so central bandwidth and storage grow with the number of events, not the number of streams. Add an edge node per district; the central tier does not change shape.</text>
 
-  <!-- ===== WORKFLOW STRIP (bottom) ===== -->
-  <text x="40" y="700" font-size="20" font-weight="700" fill="#0b2447">Operational workflow — from onboarding to a traced vehicle</text>
-
-  <g font-size="13">
-    <rect x="40" y="720" width="235" height="120" rx="10" fill="#0b2447"/>
-    <text x="56" y="746" fill="#fbbf24" font-weight="700" font-size="14">1 · Onboard</text>
-    <text x="56" y="770" fill="#ffffff">Discover the portal catalogue or</text>
-    <text x="56" y="788" fill="#ffffff">import CSV / API; every camera</text>
-    <text x="56" y="806" fill="#ffffff">gets a registry row, coordinates,</text>
-    <text x="56" y="824" fill="#ffffff">department and health state.</text>
-
-    <rect x="300" y="720" width="235" height="120" rx="10" fill="#0b2447"/>
-    <text x="316" y="746" fill="#fbbf24" font-weight="700" font-size="14">2 · Ingest</text>
-    <text x="316" y="770" fill="#ffffff">Scheduler opens streams within</text>
-    <text x="316" y="788" fill="#ffffff">the budget (RTSP over TCP,</text>
-    <text x="316" y="806" fill="#ffffff">credentials injected at open),</text>
-    <text x="316" y="824" fill="#ffffff">samples ~1 frame/s per camera.</text>
-
-    <rect x="560" y="720" width="235" height="120" rx="10" fill="#0b2447"/>
-    <text x="576" y="746" fill="#fbbf24" font-weight="700" font-size="14">3 · Analyse</text>
-    <text x="576" y="770" fill="#ffffff">Plates detected, read and voted</text>
-    <text x="576" y="788" fill="#ffffff">across frames; person / vehicle</text>
-    <text x="576" y="806" fill="#ffffff">counts per scene; each read keeps</text>
-    <text x="576" y="824" fill="#ffffff">its evidence crop and confidence.</text>
-
-    <rect x="820" y="720" width="235" height="120" rx="10" fill="#0b2447"/>
-    <text x="836" y="746" fill="#fbbf24" font-weight="700" font-size="14">4 · Correlate &amp; alert</text>
-    <text x="836" y="770" fill="#ffffff">Reads matched to the watchlist</text>
-    <text x="836" y="788" fill="#ffffff">and enriched from the vehicle DB;</text>
-    <text x="836" y="806" fill="#ffffff">a hit raises a real-time alert and</text>
-    <text x="836" y="824" fill="#ffffff">boosts neighbouring cameras.</text>
-
-    <rect x="1080" y="720" width="235" height="120" rx="10" fill="#0b2447"/>
-    <text x="1096" y="746" fill="#fbbf24" font-weight="700" font-size="14">5 · Trace &amp; report</text>
-    <text x="1096" y="770" fill="#ffffff">Given a registration number,</text>
-    <text x="1096" y="788" fill="#ffffff">SUTRA reconstructs the route with</text>
-    <text x="1096" y="806" fill="#ffffff">timestamps on the GIS map and</text>
-    <text x="1096" y="824" fill="#ffffff">exports the output report (CSV).</text>
-
-    <rect x="1340" y="720" width="220" height="120" rx="10" fill="#c2410c"/>
-    <text x="1356" y="746" fill="#ffffff" font-weight="700" font-size="14">Scale-out</text>
-    <text x="1356" y="770" fill="#ffffff">Edge → regional → central.</text>
-    <text x="1356" y="788" fill="#ffffff">Add an edge node per district;</text>
-    <text x="1356" y="806" fill="#ffffff">central grows with events, not</text>
-    <text x="1356" y="824" fill="#ffffff">streams. Target: ~80,000 cameras.</text>
-  </g>
-  <line x1="275" y1="780" x2="300" y2="780" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="535" y1="780" x2="560" y2="780" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="795" y1="780" x2="820" y2="780" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-  <line x1="1055" y1="780" x2="1080" y2="780" stroke="#0b2447" stroke-width="2.5" marker-end="url(#arrow)"/>
-
-  <text x="40" y="900" font-size="13" fill="#475569">Everything shown is running code: hosted central tier at sutra-central.onrender.com, edge node on the challenge portal's cameras, 175 automated tests, 31 recorded acceptance checks.</text>
-  <text x="40" y="922" font-size="13" fill="#475569">Repository: github.com/laveshparyani/SUTRA · Team: Lavesh Paryani, Hiral Kotwani · Full architecture and sizing in SUTRA_HLD.pdf</text>
+  <text x="48" y="962" class="foot">Everything shown is running code: hosted central tier at sutra-central.onrender.com · edge node on the challenge portal's cameras · 175 automated tests · 31 recorded acceptance checks</text>
+  <text x="48" y="982" class="foot">github.com/laveshparyani/SUTRA  ·  Team: Lavesh Paryani and Hiral Kotwani  ·  Architecture, sizing and cost model in SUTRA_HLD.pdf</text>
 </svg>
