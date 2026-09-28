@@ -1,0 +1,90 @@
+{
+  "v1": [
+    {
+      "shot": "01_intro",
+      "file": "v1_01_intro.mp3",
+      "duration": 24.58,
+      "start": 0
+    },
+    {
+      "shot": "02_overview",
+      "file": "v1_02_overview.mp3",
+      "duration": 17.95,
+      "start": 24.58
+    },
+    {
+      "shot": "03_registry",
+      "file": "v1_03_registry.mp3",
+      "duration": 21.53,
+      "start": 42.53
+    },
+    {
+      "shot": "04_wall",
+      "file": "v1_04_wall.mp3",
+      "duration": 25.99,
+      "start": 64.06
+    },
+    {
+      "shot": "05_watchlist",
+      "file": "v1_05_watchlist.mp3",
+      "duration": 16.61,
+      "start": 90.05
+    },
+    {
+      "shot": "06_alerts",
+      "file": "v1_06_alerts.mp3",
+      "duration": 26.14,
+      "start": 106.66
+    },
+    {
+      "shot": "07_trace",
+      "file": "v1_07_trace.mp3",
+      "duration": 27.05,
+      "start": 132.8
+    },
+    {
+      "shot": "08_report",
+      "file": "v1_08_report.mp3",
+      "duration": 15.96,
+      "start": 159.85
+    }
+  ],
+  "v2": [
+    {
+      "shot": "01_onboard",
+      "file": "v2_01_onboard.mp3",
+      "duration": 32.02,
+      "start": 0
+    },
+    {
+      "shot": "02_live",
+      "file": "v2_02_live.mp3",
+      "duration": 35.4,
+      "start": 32.02
+    },
+    {
+      "shot": "03_anpr",
+      "file": "v2_03_anpr.mp3",
+      "duration": 37.58,
+      "start": 67.42
+    },
+    {
+      "shot": "04_evidence",
+      "file": "v2_04_evidence.mp3",
+      "duration": 16.94,
+      "start": 105.0
+    },
+    {
+      "shot": "05_report",
+      "file": "v2_05_report.mp3",
+      "duration": 17.69,
+      "start": 121.94
+    },
+    {
+      "shot": "06_atlas",
+      "file": "v2_06_atlas.mp3",
+      "duration": 28.46,
+      "start": 139.63
+    }
+  ]
+}
