@@ -35,7 +35,9 @@ def main() -> int:
     for video, shots in timeline.items():
         out, n = [], 0
         for shot in shots:
-            srt = narration / f"{video}_{shot['shot']}.srt"
+            # derive from the audio filename: the walkthrough's shot ids already
+            # carry their prefix, so composing one would give wt_wt_7_2.srt
+            srt = narration / (Path(shot["file"]).stem + ".srt")
             if not srt.is_file():
                 print(f"  missing {srt.name}")
                 continue
