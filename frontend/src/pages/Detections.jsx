@@ -66,7 +66,13 @@ const MODES = {
 
 export function Detections() {
   const [mode, setMode] = useState("vehicles");
-  const [rows, setRows] = useState([]);
+  // Rows are held together with the mode they were fetched for. Switching mode
+  // updates `mode` at once while the new fetch is still in flight, so the new
+  // branch would otherwise render against the previous payload — and the shapes
+  // differ: a sighting carries no `cameras`, so `v.cameras.join` threw and took
+  // the whole page down. Pairing the two makes a mismatch render as empty.
+  const [loaded, setLoaded] = useState({ mode: "vehicles", rows: [] });
+  const rows = loaded.mode === mode ? loaded.rows : [];
   const [cams, setCams] = useState({});
   const [plate, setPlate] = useState("");
   const [camId, setCamId] = useState("");
@@ -83,9 +89,9 @@ export function Detections() {
           mode === "vehicles" ? api.vehicles({ ...params, hours: 168, limit: 200 })
           : mode === "sightings" ? api.sightings({ ...params, hours: 168, limit: 200 })
           : api.detections({ ...params, limit: 200 });
-        const [data, cameras] = await Promise.all([fetchRows, api.cameras()]);
+        const [payload, cameras] = await Promise.all([fetchRows, api.cameras()]);
         if (stop) return;
-        setRows(data);
+        setLoaded({ mode, rows: payload });
         setCams(Object.fromEntries(cameras.map((c) => [c.id, c])));
       } catch { /* transient */ }
     };
@@ -180,7 +186,7 @@ export function Detections() {
                 </td>
                 <td><span className="reads-pill">{v.reads}×</span></td>
                 <td>
-                  <span className="hit-count" title={`Seen by camera ids ${v.cameras.join(", ")}`}>
+                  <span className="hit-count" title={`Seen by camera ids ${(v.cameras ?? []).join(", ")}`}>
                     {v.camera_count}
                   </span>
                 </td>
