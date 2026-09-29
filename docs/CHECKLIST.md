@@ -72,13 +72,15 @@ Legend: ✅ done & verified · 🟡 partial / untested · ❌ missing
 Still open:
 
 - Two-line truck and auto plates OCR poorly (concatenation order)
-- No Playwright end-to-end suite. The browser path is covered instead by the
-  recorded acceptance run in [TESTING.md](TESTING.md), which drives the real UI
 - Accuracy is a seven-row spot check across the confidence range
   (`submission/README.md`), not an exhaustive ground-truth audit
 
 Closed since the first audit:
 
+- ~~No end-to-end browser suite~~ — `e2e/` drives the built bundle in a real
+  browser against a throwaway database on its own port: sign-in and rejection,
+  role enforcement in the interface *and* at the server, every main route, the
+  detections-view regression, and a multi-camera trace
 - ~~RTSP never exercised~~ — RTSP over TCP is now the transport for all 30
   government cameras, with credentials injected at connection time
 - ~~Snapshot folders grow unbounded~~ — retention worker enforces an evidence

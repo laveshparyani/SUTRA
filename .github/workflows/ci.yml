@@ -75,3 +75,40 @@ jobs:
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz             | tar -xz gitleaks
           ./gitleaks detect --source . --redact --no-banner --exit-code 1
+
+  e2e:
+    name: End-to-end (browser)
+    runs-on: ubuntu-latest
+    # The browser suite drives the built bundle, so it only runs once the
+    # frontend build has produced one. Kept a separate job so a browser
+    # failure is distinguishable from an API or build failure at a glance.
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: System deps (OpenCV runtime)
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libglib2.0-0
+
+      - name: Install
+        run: |
+          pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Frontend bundle
+        uses: actions/download-artifact@v7
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: End-to-end tests
+        run: python -m pytest e2e -q
+
+      - name: Server log on failure
+        if: failure()
+        run: |
+          echo "The e2e server writes to its temp data directory; the fixture"
+          echo "surfaces the tail of that log in the failure message above."

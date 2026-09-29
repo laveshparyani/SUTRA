@@ -4,3 +4,4 @@ pytest
 httpx
 py-spy
 pytest-timeout
+playwright        # drives the browser in the e2e suite
