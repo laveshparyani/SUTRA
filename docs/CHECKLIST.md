@@ -19,7 +19,7 @@ Legend: ✅ done & verified · 🟡 partial / untested · ❌ missing
 | Health & maintenance-status monitoring | ✅ | Live health, honest connecting/down states |
 | Gap-analysis reports (uncovered zones, ageing infra) | ✅ | District coverage plus ageing against a five-year cutoff, driven by `install_date` (test 1.7) |
 | Role-based search, filtering, **export**, audit trails | ✅ | Search/filter/RBAC, `GET /api/atlas/export` CSV, and the audit viewer on Atlas (tests 1.3, 1.4, 1.8, 7.2) |
-| Registry API documentation | 🟡 | FastAPI `/docs` is auto-generated and complete; no separate written API page — the one item in section A still open |
+| Registry API documentation | ✅ | [API.md](API.md) — all 42 endpoints with role requirements, generated from the OpenAPI schema by `scripts/build_api_reference.py` so it cannot drift; FastAPI `/docs` also served live |
 | Sample onboarded metadata dataset | ✅ | 38 cameras across 7 departments via discovery |
 
 ## B. Mandatory — Test case (Step 4, the live evaluation)
@@ -72,7 +72,6 @@ Legend: ✅ done & verified · 🟡 partial / untested · ❌ missing
 Still open:
 
 - Two-line truck and auto plates OCR poorly (concatenation order)
-- No written API reference page; FastAPI `//docs` is auto-generated and complete
 - No Playwright end-to-end suite. The browser path is covered instead by the
   recorded acceptance run in [TESTING.md](TESTING.md), which drives the real UI
 - Accuracy is a seven-row spot check across the confidence range
