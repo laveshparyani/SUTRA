@@ -171,6 +171,7 @@ restricted CORS, and a full audit trail. Verified against the live host.
 | [docs/SETUP_STEPS.md](docs/SETUP_STEPS.md) | hosted-deployment walkthrough |
 | [docs/CONNECTORS.md](docs/CONNECTORS.md) | government-database connector interface |
 | [CONTRIBUTORS.md](CONTRIBUTORS.md) | who built this |
+| [docs/API.md](docs/API.md) | **API reference** — all 42 endpoints with their role requirements, generated from the OpenAPI schema |
 | [docs/TESTING.md](docs/TESTING.md) | **acceptance test plan** — every hackathon requirement with the steps that prove it |
 | [docs/CHECKLIST.md](docs/CHECKLIST.md) | requirements audited against the official problem statement |
 | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) | demo video shot scripts |
