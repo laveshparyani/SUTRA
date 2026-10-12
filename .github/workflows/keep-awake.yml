@@ -1,0 +1,17 @@
+name: Keep judge URL awake
+
+# Render's free tier sleeps after 15 idle minutes, and a judge then waits
+# 30-60 s for the first page. A health ping every 5 minutes keeps it warm.
+# shortcut: GitHub may delay or skip scheduled runs under load; move to an
+# uptime service if a cold start is ever reported during judging.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 https://sutra-central.onrender.com/api/health
